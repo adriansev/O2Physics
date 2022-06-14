@@ -14,3 +14,14 @@ o2physics_add_dpl_workflow(flow-analysis
                   SOURCES flowAnalysis.cxx
                   PUBLIC_LINK_LIBRARIES O2::Framework O2Physics::AnalysisCore
                   COMPONENT_NAME AnalysisTutorial)
+
+
+target_include_directories(treecalibv0zdc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+# Then generate dictionaries and add them as a dependency of the executable (via the MODULE parameter):
+ROOT_GENERATE_DICTIONARY(TreeCalibV0ZDC_dict TreeCalibV0ZDC.h MODULE TreeCalibV0ZDC LINKDEF TreeCalibV0ZDC_linkdef.h)
+
+o2physics_add_dpl_workflow(treecalibv0zdc
+                  SOURCES TreeCalibV0ZDC.cxx
+                  PUBLIC_LINK_LIBRARIES O2::Framework O2Physics::AnalysisCore
+                  COMPONENT_NAME AnalysisTutorial)
+
