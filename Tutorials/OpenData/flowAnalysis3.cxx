@@ -11,7 +11,9 @@
 ///
 /// \brief Flow analysis.
 ///        Run as:
-///        o2-analysis-timestamp --aod-file AO2D.root -b | o2-analysis-event-selection -b | o2-analysis-multiplicity-table -b | o2-analysis-centrality-table -b | o2-analysis-track-propagation -b | o2-analysis-trackextension -b | o2-analysis-trackselection -b | o2-analysis-pid-tpc-full -b | o2-analysis-pid-tof-full -b | o2-analysis-pid-tof-beta -b | o2-analysistutorial-flow-analysis -b
+///        o2-analysis-timestamp --aod-file AO2D.root -b | o2-analysis-event-selection -b | o2-analysis-multiplicity-table -b | o2-analysis-centrality-table -b | o2-analysis-track-propagation -b | o2-analysis-trackextension -b | o2-analysis-trackselection -b | o2-analysis-pid-tpc-full -b | o2-analysis-pid-tof-full -b | o2-analysis-pid-tof-beta -b |  o2-analysis-pid-tof-base -b | o2-analysis-fdd-converter - b | o2-analysistutorial-flow-analysis3 -b
+///        
+///        o2-analysis-timestamp --aod-file AO2D.root --configuration json://config-file.json | o2-analysis-event-selection --configuration json://config-file.json | o2-analysis-multiplicity-table -b | o2-analysis-centrality-table -b | o2-analysis-track-propagation -b | o2-analysis-trackextension --configuration json://config-file.json | o2-analysis-trackselection -b | o2-analysis-pid-tpc-full -b | o2-analysis-pid-tof-full -b | o2-analysis-pid-tof-beta -b |  o2-analysis-pid-tof-base -b | o2-analysis-fdd-converter - b | o2-analysistutorial-flow-analysis3 -b
 /// \author
 /// \since
 
@@ -37,16 +39,16 @@ using namespace o2::framework::expressions;
 struct flow_base {
 
   using BCsInfos = soa::Join<aod::BCs, o2::aod::Timestamps>;
-  using Colls = soa::Join<aod::Collisions, aod::EvSels, aod::Mults, aod::CentFV0As, aod::CentFT0Ms, aod::CentFDDMs, aod::CentNTPVs>;
-  using FilteredColls = soa::Filtered<Colls>;
-
+  using Colls = soa::Join<aod::Collisions, aod::EvSels, aod::Mults, aod::CentFT0Cs>;
+    
+  //using FilteredCollisions = soa::Filtered<Colls>;
+    //Filter collisionFilter = (aod::collision::flags & (uint16_t)aod::collision::CollisionFlagsRun2::Run2VertexerTracks) == (uint16_t)aod::collision::CollisionFlagsRun2::Run2VertexerTracks;
+    
   using TracksPID = soa::Join<aod::pidTPCFullPi, aod::pidTPCFullKa, aod::pidTPCFullPr, aod::pidTOFFullPi, aod::pidTOFFullKa, aod::pidTOFFullPr, aod::pidTOFbeta>;
   using TrackCandidates = soa::Join<aod::Tracks, aod::TracksExtra, aod::TracksDCA, aod::TrackSelection, TracksPID>;
   using FilteredTracks = soa::Filtered<TrackCandidates>;
-
-  //Filter collisionFilter = (aod::collision::flags & (uint16_t)aod::collision::CollisionFlagsRun2::Run2VertexerTracks) == (uint16_t)aod::collision::CollisionFlagsRun2::Run2VertexerTracks;
-  //Filter trackFilter = ((requireGlobalTrackInFilter()) || (aod::track::isGlobalTrackSDD == (uint8_t) true));
-  Filter trackFilter = (requireGlobalTrackInFilter());
+    //Filter trackFilter = ((requireGlobalTrackInFilter()) || (aod::track::isGlobalTrackSDD == (uint8_t) true));
+    Filter trackFilter = (requireGlobalTrackInFilter());
 
   Configurable<int> eventSelection{"eventSelection", 1, "event selection"};
   Configurable<bool> phiCut{"phiCut", false, "activate phi cut"};
@@ -55,8 +57,8 @@ struct flow_base {
   Configurable<bool> exclPID{"exclPID", false, "exclusive PID"};
   Configurable<float> vtxCut{"vtxCut", 10.0, "Z vertex cut"};
   Configurable<float> etaCut{"etaCut", 0.8, "Eta cut"};
-  Configurable<float> dcazCut{"dcazCut", 3.2, "DCAz cut"};
-  Configurable<float> dcaxyCut{"dcaxyCut", 2.4, "DCAxy cut"};
+    Configurable<float> dcazCut{"dcazCut", 3.2, "DCAz cut"};
+    Configurable<float> dcaxyCut{"dcaxyCut", 2.4, "DCAxy cut"};
   Configurable<float> etaGap{"etaGap", 0.5, "Eta gap"};
   Configurable<int> noClus{"noClus", 70, "Number of clusters"};
   // Configurable<int> noClusPid{"noClusPid", 70, "Number of clusters for PID"};
@@ -69,6 +71,7 @@ struct flow_base {
   Configurable<float> maxPCut{"maxPCut", -15.0, "Maximum P cut"};
   Configurable<float> nsigCut{"nsigCut", 3.0, "Nsigma cut for PID"};
 
+    
   TF1* fPhiCutLow = nullptr;
   TF1* fPhiCutHigh = nullptr;
 
@@ -185,18 +188,10 @@ struct flow_base {
   {
     AxisSpec axisVtxcounts{2, -0.5f, 1.5f, "Vtx info (0=no, 1=yes)"};
     AxisSpec axisZvert{120, -30.f, 30.f, "Vtx z (cm)"};
-    AxisSpec axisCent{100, 0.f, 100.f, "centrality V0M"};
-    AxisSpec axisCentT0{100, 0.f, 100.f, "centrality FT0"};
-    AxisSpec axisCentFDD{100, 0.f, 100.f, "centrality FDD"};
-      AxisSpec axisCentNTPV{100, 0.f, 100.f, "centrality NTPV"};
-    AxisSpec axisMult{1000, -0.5f, 3999.5f, "multiplicity"};
-    AxisSpec axisTracklets{1000, -0.5f, 6999.5f, "SPD N_{tracklets}"};
-    AxisSpec axisClusters{1000, -0.5f, 24999.5f, "SPD N_{clusters}"};
-    AxisSpec axismultV0on{1000, 0, 50000, "multV0on"};
-    AxisSpec axismultV0of{1000, 0, 50000, "multV0of"};
+    AxisSpec axisCent{100, 0.f, 100.f, "centrality"};
     AxisSpec axisCentBins{{0, 5., 10., 20., 30., 40., 50., 60., 70., 80.}, "centrality percentile"};
     AxisSpec axisPtBins{{0., 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.25, 2.5, 2.75, 3.0, 3.5, 4.0, 4.5, 5.0, 6.0, 8.0, 10., 13., 16., 20.}, "p_{T} (GeV/c)"};
-    AxisSpec axisPtBinsLow{{0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 3.0, 3.5, 4.0}, "p_{T} (GeV/c)"};
+    AxisSpec axisPtBinsLow{{0., 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 3.0, 3.5, 4.0}, "p_{T} (GeV/c)"};
     AxisSpec axisPtBinsHigh{{3.0, 3.5, 4.0, 5.0, 6.0, 8.0, 10.0, 13.0, 16.0, 20.0}, "p_{T} (GeV/c)"};
     AxisSpec axisDpi{100, -30.f, 20.f, "#Delta#pi"};
     AxisSpec axisQADedx{150, 0.f, 300.f, "dEdx"};
@@ -204,33 +199,30 @@ struct flow_base {
     AxisSpec axisQAP{50, 0.f, 5.f, "p (GeV/c)"};
       AxisSpec axisEta{72, -0.9f, 0.9f, "#eta"};
       AxisSpec axisPhi{144, 0.f, TMath::TwoPi(), "varphi"};
-      AxisSpec axisDCAz{200, -10.f, 10.f, "DCA_{z}"};
-      AxisSpec axisDCAxy{200, -10.f, 10.f, "DCA_{xy}"};
+      AxisSpec axisDCAz{100, -2.5f, 2.5f, "DCA_{z}"};
+      AxisSpec axisDCAxy{100, -0.5f, 0.5f, "DCA_{xy}"};
+      AxisSpec axisMultFw{2000, 0, 100000, "mult"};
+      AxisSpec axisMult{1000, -0.5f, 3999.5f, "multiplicity"};
+      AxisSpec axisTracklets{1000, -0.5f, 9999.5f, "SPD N_{tracklets}"};
+      
 
-    histos.add("vtx", "Vtx info (0=no, 1=yes); Vtx; Counts", kTH1I, {axisVtxcounts});
-            
-    histos.add("vtxCutsBef", "Vtx distribution; Vtx z [cm]; Counts", kTH1F, {axisZvert});
-    histos.add("cenT0vsV0MBef", "centrality V0M vs centrality T0M", kTH2F, {axisCent, axisCentT0});
-    histos.add("cenFDDvsV0MBef", "centrality V0M vs centrality FDD", kTH2F, {axisCent, axisCentFDD});
-      histos.add("cenNTPVvsV0MBef", "centrality V0M vs centrality NTPV", kTH2F, {axisCent, axisCentNTPV});
-    histos.add("cenT0vsFDDBef", "centrality T0 vs centrality FDD", kTH2F, {axisCentFDD, axisCentT0});
-      histos.add("cenT0vsNTPVBef", "centrality T0 vs centrality NTPV", kTH2F, {axisCentNTPV, axisCentT0});
-      histos.add("cenFDDvsNTPVBef", "centrality FDD vs centrality NTPV", kTH2F, {axisCentNTPV, axisCentFDD});
-    histos.add("SPclsvsSPDtrksBef", "SPD N_{tracklets} vs SPD N_{clusters}", kTH2I, {axisTracklets, axisClusters});
-    histos.add("multV0onvsMultV0ofBef", "V0 offline vs V0 online", kTH2F, {axismultV0of, axismultV0on});
-      histos.add("multvsCentBef", "centrality vs multiplicity", kTH2F, {axisCent, axisMult});
+      histos.add("vtx", "Vtx info (0=no, 1=yes); Vtx; Counts", kTH1I, {axisVtxcounts});
       
-      
+      histos.add("vtxCutsBef", "Vtx distribution; Vtx z [cm]; Counts", kTH1F, {axisZvert});
+      histos.add("multTrklvsCentBef", "N_{tracklets} vs centrality T0C", kTH2F, {axisCent, axisTracklets});
+      histos.add("multvsCentBef", " multiplicity vs centrality T0C", kTH2F, {axisCent, axisMult});
+      histos.add("multTrkPVvsCentBef", " multiplicity PV vs centrality T0C", kTH2F, {axisCent, axisMult});
+      histos.add("multV0AvsCentBef", " multiplicity V0A vs centrality T0C", kTH2F, {axisCent, axisMultFw});
+      histos.add("multT0CvsmultT0ABef", " multiplicity T0C vs multiplicity T0A", kTH2F, {axisMultFw, axisMultFw});
+      histos.add("multTrkPVvsMultT0CBef", " multiplicity PV vs multiplicity T0C", kTH2F, {axisMultFw, axisMult});
+
       histos.add("vtxCutsAft", "Vtx distribution (after cuts); Vtx z [cm]; Counts", kTH1F, {axisZvert});
-      histos.add("cenT0vsV0MAft", "centrality V0M vs centrality T0M (after cuts)", kTH2F, {axisCent, axisCentT0});
-      histos.add("cenFDDvsV0MAft", "centrality V0M vs centrality FDD (after cuts)", kTH2F, {axisCent, axisCentFDD});
-        histos.add("cenNTPVvsV0MAft", "centrality V0M vs centrality NTPV (after cuts)", kTH2F, {axisCent, axisCentNTPV});
-      histos.add("cenT0vsFDDAft", "centrality T0 vs centrality FDD (after cuts)", kTH2F, {axisCentFDD, axisCentT0});
-        histos.add("cenT0vsNTPVAft", "centrality T0 vs centrality NTPV (after cuts)", kTH2F, {axisCentNTPV, axisCentT0});
-        histos.add("cenFDDvsNTPVAft", "centrality FDD vs centrality NTPV (after cuts)", kTH2F, {axisCentNTPV, axisCentFDD});
-      histos.add("SPclsvsSPDtrksAft", "SPD N_{tracklets} vs SPD N_{clusters} (after cuts)", kTH2I, {axisTracklets, axisClusters});
-      histos.add("multV0onvsMultV0ofAft", "V0 offline vs V0 online (after cuts)", kTH2F, {axismultV0of, axismultV0on});
-      histos.add("multvsCentAft", "centrality vs multiplicity (after cuts)", kTH2F, {axisCent, axisMult});
+      histos.add("multTrklvsCentAft", "N_{tracklets} vs centrality T0C", kTH2F, {axisCent, axisTracklets});
+      histos.add("multvsCentAft", " multiplicity vs centrality T0C", kTH2F, {axisCent, axisMult});
+      histos.add("multTrkPVvsCentAft", " multiplicity PV vs centrality T0C", kTH2F, {axisCent, axisMult});
+      histos.add("multV0AvsCentAft", " multiplicity V0A vs centrality T0C", kTH2F, {axisCent, axisMultFw});
+      histos.add("multT0CvsmultT0AAft", " multiplicity T0C vs multiplicity T0A", kTH2F, {axisMultFw, axisMultFw});
+      histos.add("multTrkPVvsMultT0CAft", " multiplicity PV vs multiplicity T0C", kTH2F, {axisMultFw, axisMult});
       
       
     histos.add("res", "centrality percentile vs Resolution", kTProfile, {axisCentBins});
@@ -370,54 +362,46 @@ struct flow_base {
       histos.fill(HIST("vtx"), 0);
     else
       histos.fill(HIST("vtx"), 1);
+      
+      
+      auto bc = collision.bc_as<BCsInfos>();
+      auto field = (magField == 99999) ? getMagneticField(bc.timestamp()) : magField ;
 
-    auto v0Centr = collision.centFV0A();
-    auto t0Centr = collision.centFT0M();
-    auto fddCentr = collision.centFDDM();
-    auto ntpvCentr = collision.centNTPV();
-
-    auto bc = collision.bc_as<BCsInfos>();
-    auto field = getMagneticField(bc.timestamp());
-
-    auto nITSCls = collision.spdClusters();
-    //auto nITSTrkls = collision.multTracklets();
-    auto nITSTrkls = collision.nTracklets();
-
-    auto multV0Tot = collision.multFV0A();
-    auto multV0On = 1; //bc.v0TriggerChargeA();
-
+      
+      auto t0cCentr = collision.centFT0C();
+      
+      auto multTrkls = collision.multTracklets();
+      auto multV0A = collision.multFV0A();
+      auto multT0A = collision.multFT0A();
+      auto multT0C = collision.multFT0C();
+      auto multNTracksPV = collision.multNTracksPV();
       
       Int_t multTrk = tracks.size();
-
       
-    histos.fill(HIST("vtxCutsBef"), zvtx);
-    histos.fill(HIST("cenT0vsV0MBef"), v0Centr, t0Centr);
-    histos.fill(HIST("cenFDDvsV0MBef"), v0Centr, fddCentr);
-      histos.fill(HIST("cenNTPVvsV0MBef"), v0Centr, ntpvCentr);
-    histos.fill(HIST("cenT0vsFDDBef"), fddCentr, t0Centr);
-      histos.fill(HIST("cenT0vsNTPVBef"), ntpvCentr, t0Centr);
-      histos.fill(HIST("cenFDDvsNTPVBef"), ntpvCentr, fddCentr);
-    histos.fill(HIST("SPclsvsSPDtrksBef"), nITSTrkls, nITSCls);
-    histos.fill(HIST("multV0onvsMultV0ofBef"), multV0Tot, multV0On);
-      histos.fill(HIST("multvsCentBef"), v0Centr, multTrk);
-     
+      
+      histos.fill(HIST("vtxCutsBef"), zvtx);
+      histos.fill(HIST("multTrklvsCentBef"), t0cCentr, multTrkls);
+      histos.fill(HIST("multvsCentBef"), t0cCentr, multTrk);
+      histos.fill(HIST("multTrkPVvsCentBef"), t0cCentr, multNTracksPV);
+      histos.fill(HIST("multV0AvsCentBef"), t0cCentr, multV0A);
+      histos.fill(HIST("multT0CvsmultT0ABef"), multT0A, multT0C);
+      histos.fill(HIST("multTrkPVvsMultT0CBef"), multT0C, multNTracksPV);
+
       
       if (TMath::Abs(zvtx) > vtxCut)
         return;
       
-    if (v0Centr >= 80. || v0Centr < 0)
-        return;
+      if (t0cCentr >= 80. || t0cCentr < 0)
+          return;
+      
       
       histos.fill(HIST("vtxCutsAft"), zvtx);
-      histos.fill(HIST("cenT0vsV0MAft"), v0Centr, t0Centr);
-      histos.fill(HIST("cenFDDvsV0MAft"), v0Centr, fddCentr);
-        histos.fill(HIST("cenNTPVvsV0MAft"), v0Centr, ntpvCentr);
-      histos.fill(HIST("cenT0vsFDDAft"), fddCentr, t0Centr);
-        histos.fill(HIST("cenT0vsNTPVAft"), ntpvCentr, t0Centr);
-        histos.fill(HIST("cenFDDvsNTPVAft"), ntpvCentr, fddCentr);
-      histos.fill(HIST("SPclsvsSPDtrksAft"), nITSTrkls, nITSCls);
-      histos.fill(HIST("multV0onvsMultV0ofAft"), multV0Tot, multV0On);
-      histos.fill(HIST("multvsCentAft"), v0Centr, multTrk);
+      histos.fill(HIST("multTrklvsCentAft"), t0cCentr, multTrkls);
+      histos.fill(HIST("multvsCentAft"), t0cCentr, multTrk);
+      histos.fill(HIST("multTrkPVvsCentAft"), t0cCentr, multNTracksPV);
+      histos.fill(HIST("multV0AvsCentAft"), t0cCentr, multV0A);
+      histos.fill(HIST("multT0CvsmultT0AAft"), multT0A, multT0C);
+      histos.fill(HIST("multTrkPVvsMultT0CAft"), multT0C, multNTracksPV);
       
 
     // process the tracks of a given collision
@@ -431,8 +415,8 @@ struct flow_base {
 
     for (auto& track : tracks) {
 
-      Double_t trackpt = track.pt();
-      Double_t tracketa = track.eta();
+        Double_t trackpt = track.pt();
+        Double_t tracketa = track.eta();
         Double_t trackdcaz = track.dcaZ();
         Double_t trackdcaxy = track.dcaXY();
         Double_t trackphi = track.phi();
@@ -458,14 +442,15 @@ struct flow_base {
 
     
     if (multGapA > 0 && multGapC > 0) {
+        
       Double_t resGap = (QxnGapA * QxnGapC + QynGapA * QynGapC) / (multGapA * multGapC);
-      histos.fill(HIST("res"), v0Centr, resGap);
+      histos.fill(HIST("res"), t0cCentr, resGap);
 
-      histos.fill(HIST("QxnA"), v0Centr, QxnGapA / multGapA);
-      histos.fill(HIST("QxnC"), v0Centr, QxnGapC / multGapC);
+      histos.fill(HIST("QxnA"), t0cCentr, QxnGapA / multGapA);
+      histos.fill(HIST("QxnC"), t0cCentr, QxnGapC / multGapC);
 
-      histos.fill(HIST("QynA"), v0Centr, QynGapA / multGapA);
-      histos.fill(HIST("QynC"), v0Centr, QynGapC / multGapC);
+      histos.fill(HIST("QynA"), t0cCentr, QynGapA / multGapA);
+      histos.fill(HIST("QynC"), t0cCentr, QynGapC / multGapC);
     }
 
       
@@ -477,16 +462,16 @@ struct flow_base {
         Double_t trackdcaxy = track.dcaXY();
         Double_t trackphi = track.phi();
         
-        histos.fill(HIST("QA/QAEtaPhi"), tracketa, trackphi, v0Centr);
-        histos.fill(HIST("QA/QADCAz"), trackdcaz, v0Centr);
-        histos.fill(HIST("QA/QADCAxy"), trackdcaxy, v0Centr);
+        histos.fill(HIST("QA/QAEtaPhi"), tracketa, trackphi, t0cCentr);
+        histos.fill(HIST("QA/QADCAz"), trackdcaz, t0cCentr);
+        histos.fill(HIST("QA/QADCAxy"), trackdcaxy, t0cCentr);
 
       if (TMath::Abs(tracketa) >= etaCut || track.tpcNClsFound() < noClus || trackpt < minPt || trackpt >= maxPt || TMath::Abs(trackdcaz) >= dcazCut || TMath::Abs(trackdcaxy) >= dcaxyCut)
         continue;
         
-        histos.fill(HIST("QA/QAEtaPhiAft"), tracketa, trackphi, v0Centr);
-        histos.fill(HIST("QA/QADCAzAft"), trackdcaz, v0Centr);
-        histos.fill(HIST("QA/QADCAxyAft"), trackdcaxy, v0Centr);
+        histos.fill(HIST("QA/QAEtaPhiAft"), tracketa, trackphi, t0cCentr);
+        histos.fill(HIST("QA/QADCAzAft"), trackdcaz, t0cCentr);
+        histos.fill(HIST("QA/QADCAxyAft"), trackdcaxy, t0cCentr);
         
 
       if (phiCut) {
@@ -525,12 +510,12 @@ struct flow_base {
 
       if (tracketa > etaGap && multGapA > 0) {
         Double_t vnC = harmGapA / multGapA;
-        fillCPt(trackpt, v0Centr, vnC, sinHarmn, cosHarmn);
+        fillCPt(trackpt, t0cCentr, vnC, sinHarmn, cosHarmn);
       }
 
       if (tracketa < -etaGap && multGapC > 0) {
         Double_t vnA = harmGapC / multGapC;
-        fillAPt(trackpt, v0Centr, vnA, sinHarmn, cosHarmn);
+        fillAPt(trackpt, t0cCentr, vnA, sinHarmn, cosHarmn);
       }
 
       //> TPCsignalN not available
@@ -541,22 +526,22 @@ struct flow_base {
       // Double_t Dpi = track.tpcSignal() - track.tpcExpSignalPi();
 
       if (hasQA && trackpt >= 3.)
-        histos.fill(HIST("QA/DeltaPi"), trackpt, Dpi, v0Centr);
+        histos.fill(HIST("QA/DeltaPi"), trackpt, Dpi, t0cCentr);
 
       // pi high pT
       if ((Dpi > minPiCut) && (Dpi < maxPiCut) && (trackpt >= 3.) /*&& (aodTrk1->GetTPCmomentum() > 3.)*/) {
         // Double_t rapPiHPt = getRapidity(0.139570, trackpt, tracketa);
         // if (TMath::Abs(rapPiHPt) < 0.5) {
         if (hasQA)
-          histos.fill(HIST("QA/DeltaPiPi"), trackpt, Dpi, v0Centr);
+          histos.fill(HIST("QA/DeltaPiPi"), trackpt, Dpi, t0cCentr);
         if (tracketa < -etaGap && multGapC > 0) {
           Double_t vnSPPihA = harmGapC / multGapC;
-          fillVnPihighPtA(trackpt, v0Centr, vnSPPihA, sinHarmn, cosHarmn);
+          fillVnPihighPtA(trackpt, t0cCentr, vnSPPihA, sinHarmn, cosHarmn);
         }
 
         if (tracketa > etaGap && multGapA > 0) {
           Double_t vnSPPihC = harmGapA / multGapA;
-          fillVnPihighPtC(trackpt, v0Centr, vnSPPihC, sinHarmn, cosHarmn);
+          fillVnPihighPtC(trackpt, t0cCentr, vnSPPihC, sinHarmn, cosHarmn);
         }
         //}
       }
@@ -566,15 +551,15 @@ struct flow_base {
         // Double_t rapPHPt = getRapidity(0.938272, trackpt, tracketa);
         // if (TMath::Abs(rapPHPt) < 0.5) {
         if (hasQA)
-          histos.fill(HIST("QA/DeltaPiP"), trackpt, Dpi, v0Centr);
+          histos.fill(HIST("QA/DeltaPiP"), trackpt, Dpi, t0cCentr);
         if (tracketa < -etaGap && multGapC > 0) {
           Double_t vnSPPhA = harmGapC / multGapC;
-          fillVnPhighPtA(trackpt, v0Centr, vnSPPhA, sinHarmn, cosHarmn);
+          fillVnPhighPtA(trackpt, t0cCentr, vnSPPhA, sinHarmn, cosHarmn);
         }
 
         if (tracketa > etaGap && multGapA > 0) {
           Double_t vnSPPhC = harmGapA / multGapA;
-          fillVnPhighPtC(trackpt, v0Centr, vnSPPhC, sinHarmn, cosHarmn);
+          fillVnPhighPtC(trackpt, t0cCentr, vnSPPhC, sinHarmn, cosHarmn);
         }
         //}
       }
@@ -641,16 +626,16 @@ struct flow_base {
         // if (TMath::Abs(rapPi) < 0.5) {
         if (tracketa < -etaGap && multGapC > 0) {
           Double_t vnSPPiA = harmGapC / multGapC;
-          fillVnPiA(trackpt, v0Centr, vnSPPiA, sinHarmn, cosHarmn);
+          fillVnPiA(trackpt, t0cCentr, vnSPPiA, sinHarmn, cosHarmn);
         }
 
         if (tracketa > etaGap && multGapA > 0) {
           Double_t vnSPPiC = harmGapA / multGapA;
-          fillVnPiC(trackpt, v0Centr, vnSPPiC, sinHarmn, cosHarmn);
+          fillVnPiC(trackpt, t0cCentr, vnSPPiC, sinHarmn, cosHarmn);
         }
 
         if (hasQA && TMath::Abs(tracketa) > etaGap)
-          fillQAPi(track.p(), v0Centr, track.tpcSignal(), betaPiK);
+          fillQAPi(track.p(), t0cCentr, track.tpcSignal(), betaPiK);
         //}
       }
 
@@ -662,16 +647,16 @@ struct flow_base {
         // if (TMath::Abs(rapK) < 0.5) {
         if (tracketa < -etaGap && multGapC > 0) {
           Double_t vnSPKA = harmGapC / multGapC;
-          fillVnKA(trackpt, v0Centr, vnSPKA, sinHarmn, cosHarmn);
+          fillVnKA(trackpt, t0cCentr, vnSPKA, sinHarmn, cosHarmn);
         }
 
         if (tracketa > etaGap && multGapA > 0) {
           Double_t vnSPKC = harmGapA / multGapA;
-          fillVnKC(trackpt, v0Centr, vnSPKC, sinHarmn, cosHarmn);
+          fillVnKC(trackpt, t0cCentr, vnSPKC, sinHarmn, cosHarmn);
         }
 
         if (hasQA && TMath::Abs(tracketa) > etaGap)
-          fillQAK(track.p(), v0Centr, track.tpcSignal(), betaPiK);
+          fillQAK(track.p(), t0cCentr, track.tpcSignal(), betaPiK);
         //}
       }
 
@@ -684,16 +669,16 @@ struct flow_base {
           // if (TMath::Abs(rapP) < 0.5) {
           if (tracketa < -etaGap && multGapC > 0) {
             Double_t vnSPPA = harmGapC / multGapC;
-            fillVnPA(trackpt, v0Centr, vnSPPA, sinHarmn, cosHarmn);
+            fillVnPA(trackpt, t0cCentr, vnSPPA, sinHarmn, cosHarmn);
           }
 
           if (tracketa > etaGap && multGapA > 0) {
             Double_t vnSPPC = harmGapA / multGapA;
-            fillVnPC(trackpt, v0Centr, vnSPPC, sinHarmn, cosHarmn);
+            fillVnPC(trackpt, t0cCentr, vnSPPC, sinHarmn, cosHarmn);
           }
 
           if (hasQA && TMath::Abs(tracketa) > etaGap)
-            fillQAP(track.p(), v0Centr, track.tpcSignal(), betaP);
+            fillQAP(track.p(), t0cCentr, track.tpcSignal(), betaP);
           //}
         }
       }
