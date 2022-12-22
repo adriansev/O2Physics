@@ -70,6 +70,7 @@ struct flow_base {
   Configurable<float> minPCut{"minPCut", -25.0, "Minimum P cut"};
   Configurable<float> maxPCut{"maxPCut", -15.0, "Maximum P cut"};
   Configurable<float> nsigCut{"nsigCut", 3.0, "Nsigma cut for PID"};
+    Configurable<float> magField{"magField", 99999, "Configurable magnetic field; default will CCDB will be queried"};
 
     
   TF1* fPhiCutLow = nullptr;
