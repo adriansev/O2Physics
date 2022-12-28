@@ -75,16 +75,23 @@ struct flow_base {
     
   TF1* fPhiCutLow = nullptr;
   TF1* fPhiCutHigh = nullptr;
+    
+    TF1* fMultPVCutLow = nullptr;
+    TF1* fMultPVCutHigh = nullptr;
+    
+    TF1* fMultCutLow = nullptr;
+    TF1* fMultCutHigh = nullptr;
 
   Service<o2::ccdb::BasicCCDBManager> ccdb;
 
-  static constexpr int ncent_bins = 10;
+  //static constexpr int ncent_bins = 10;
 
   HistogramRegistry histos{"Histos", {}, OutputObjHandlingPolicy::AnalysisObject};
 
     
   void fillAPt(double trackpt, double cent, double vn, double sinHarm, double cosHarm)
   {
+      histos.fill(HIST("PtA"), cent, trackpt);
     histos.fill(HIST("VnAPt"), trackpt, cent, vn);
     histos.fill(HIST("SinnAPt"), trackpt, cent, sinHarm);
     histos.fill(HIST("CosnAPt"), trackpt, cent, cosHarm);
@@ -92,6 +99,7 @@ struct flow_base {
 
   void fillCPt(double trackpt, double cent, double vn, double sinHarm, double cosHarm)
   {
+      histos.fill(HIST("PtC"), cent, trackpt);
     histos.fill(HIST("VnCPt"), trackpt, cent, vn);
     histos.fill(HIST("SinnCPt"), trackpt, cent, sinHarm);
     histos.fill(HIST("CosnCPt"), trackpt, cent, cosHarm);
@@ -99,6 +107,7 @@ struct flow_base {
 
   void fillVnPihighPtA(double trackpt, double cent, double vn, double sinHarm, double cosHarm)
   {
+      histos.fill(HIST("highpt/PtPihighA"), cent, trackpt);
     histos.fill(HIST("highpt/VnPihighPtA"), trackpt, cent, vn);
     histos.fill(HIST("highpt/SinnPihighPtA"), trackpt, cent, sinHarm);
     histos.fill(HIST("highpt/CosnPihighPtA"), trackpt, cent, cosHarm);
@@ -106,6 +115,7 @@ struct flow_base {
 
   void fillVnPihighPtC(double trackpt, double cent, double vn, double sinHarm, double cosHarm)
   {
+      histos.fill(HIST("highpt/PtPihighC"), cent, trackpt);
     histos.fill(HIST("highpt/VnPihighPtC"), trackpt, cent, vn);
     histos.fill(HIST("highpt/SinnPihighPtC"), trackpt, cent, sinHarm);
     histos.fill(HIST("highpt/CosnPihighPtC"), trackpt, cent, cosHarm);
@@ -113,6 +123,7 @@ struct flow_base {
 
   void fillVnPhighPtA(double trackpt, double cent, double vn, double sinHarm, double cosHarm)
   {
+      histos.fill(HIST("highpt/PtPhighA"), cent, trackpt);
     histos.fill(HIST("highpt/VnPhighPtA"), trackpt, cent, vn);
     histos.fill(HIST("highpt/SinnPhighPtA"), trackpt, cent, sinHarm);
     histos.fill(HIST("highpt/CosnPhighPtA"), trackpt, cent, cosHarm);
@@ -120,6 +131,7 @@ struct flow_base {
 
   void fillVnPhighPtC(double trackpt, double cent, double vn, double sinHarm, double cosHarm)
   {
+      histos.fill(HIST("highpt/PtPhighC"), cent, trackpt);
     histos.fill(HIST("highpt/VnPhighPtC"), trackpt, cent, vn);
     histos.fill(HIST("highpt/SinnPhighPtC"), trackpt, cent, sinHarm);
     histos.fill(HIST("highpt/CosnPhighPtC"), trackpt, cent, cosHarm);
@@ -127,6 +139,7 @@ struct flow_base {
 
   void fillVnPiA(double trackpt, double cent, double vn, double sinHarm, double cosHarm)
   {
+      histos.fill(HIST("pions/PtPiA"), cent, trackpt);
     histos.fill(HIST("pions/VnPiA"), trackpt, cent, vn);
     histos.fill(HIST("pions/SinnPiA"), trackpt, cent, sinHarm);
     histos.fill(HIST("pions/CosnPiA"), trackpt, cent, cosHarm);
@@ -134,6 +147,7 @@ struct flow_base {
 
   void fillVnPiC(double trackpt, double cent, double vn, double sinHarm, double cosHarm)
   {
+      histos.fill(HIST("pions/PtPiC"), cent, trackpt);
     histos.fill(HIST("pions/VnPiC"), trackpt, cent, vn);
     histos.fill(HIST("pions/SinnPiC"), trackpt, cent, sinHarm);
     histos.fill(HIST("pions/CosnPiC"), trackpt, cent, cosHarm);
@@ -141,6 +155,7 @@ struct flow_base {
 
   void fillVnKA(double trackpt, double cent, double vn, double sinHarm, double cosHarm)
   {
+      histos.fill(HIST("kaons/PtKA"), cent, trackpt);
     histos.fill(HIST("kaons/VnKA"), trackpt, cent, vn);
     histos.fill(HIST("kaons/SinnKA"), trackpt, cent, sinHarm);
     histos.fill(HIST("kaons/CosnKA"), trackpt, cent, cosHarm);
@@ -148,6 +163,7 @@ struct flow_base {
 
   void fillVnKC(double trackpt, double cent, double vn, double sinHarm, double cosHarm)
   {
+      histos.fill(HIST("kaons/PtKC"), cent, trackpt);
     histos.fill(HIST("kaons/VnKC"), trackpt, cent, vn);
     histos.fill(HIST("kaons/SinnKC"), trackpt, cent, sinHarm);
     histos.fill(HIST("kaons/CosnKC"), trackpt, cent, cosHarm);
@@ -155,6 +171,7 @@ struct flow_base {
 
   void fillVnPA(double trackpt, double cent, double vn, double sinHarm, double cosHarm)
   {
+      histos.fill(HIST("protons/PtPA"), cent, trackpt);
     histos.fill(HIST("protons/VnPA"), trackpt, cent, vn);
     histos.fill(HIST("protons/SinnPA"), trackpt, cent, sinHarm);
     histos.fill(HIST("protons/CosnPA"), trackpt, cent, cosHarm);
@@ -162,6 +179,7 @@ struct flow_base {
 
   void fillVnPC(double trackpt, double cent, double vn, double sinHarm, double cosHarm)
   {
+      histos.fill(HIST("protons/PtPC"), cent, trackpt);
     histos.fill(HIST("protons/VnPC"), trackpt, cent, vn);
     histos.fill(HIST("protons/SinnPC"), trackpt, cent, sinHarm);
     histos.fill(HIST("protons/CosnPC"), trackpt, cent, cosHarm);
@@ -202,29 +220,44 @@ struct flow_base {
       AxisSpec axisPhi{144, 0.f, TMath::TwoPi(), "varphi"};
       AxisSpec axisDCAz{100, -2.5f, 2.5f, "DCA_{z}"};
       AxisSpec axisDCAxy{100, -0.5f, 0.5f, "DCA_{xy}"};
-      AxisSpec axisMultFw{2000, 0, 100000, "mult"};
-      AxisSpec axisMult{1000, -0.5f, 3999.5f, "multiplicity"};
-      AxisSpec axisTracklets{1000, -0.5f, 9999.5f, "SPD N_{tracklets}"};
+      AxisSpec axisMultFw{1000, 0, 200000, "mult"};
+      AxisSpec axisMult{1000, 0.f, 4000.f, "multiplicity"};
       
 
       histos.add("vtx", "Vtx info (0=no, 1=yes); Vtx; Counts", kTH1I, {axisVtxcounts});
       
       histos.add("vtxCutsBef", "Vtx distribution; Vtx z [cm]; Counts", kTH1F, {axisZvert});
-      histos.add("multTrklvsCentBef", "N_{tracklets} vs centrality T0C", kTH2F, {axisCent, axisTracklets});
       histos.add("multvsCentBef", " multiplicity vs centrality T0C", kTH2F, {axisCent, axisMult});
+      histos.add("multvsMultT0CBef", " multiplicity vs multiplicity T0C", kTH2F, {axisMultFw, axisMult});
+      histos.add("multvsmultV0ABef", " multiplicity vs multiplicity V0A", kTH2F, {axisMultFw, axisMult});
+      histos.add("multvsmultT0ABef", " multiplicity vs multiplicity T0A", kTH2F, {axisMultFw, axisMult});
+      histos.add("multvsmultTrkPVBef", " multiplicity vs multiplicity PV", kTH2F, {axisMult, axisMult});
       histos.add("multTrkPVvsCentBef", " multiplicity PV vs centrality T0C", kTH2F, {axisCent, axisMult});
+      histos.add("multTrkPVvsMultT0CBef", " multiplicity PV vs multiplicity T0C", kTH2F, {axisMultFw, axisMult});
+      histos.add("multTrkPVvsmultV0ABef", " multiplicity PV vs multiplicity V0A", kTH2F, {axisMultFw, axisMult});
+      histos.add("multTrkPVvsmultT0ABef", " multiplicity PV vs multiplicity T0A", kTH2F, {axisMultFw, axisMult});
       histos.add("multV0AvsCentBef", " multiplicity V0A vs centrality T0C", kTH2F, {axisCent, axisMultFw});
       histos.add("multT0CvsmultT0ABef", " multiplicity T0C vs multiplicity T0A", kTH2F, {axisMultFw, axisMultFw});
-      histos.add("multTrkPVvsMultT0CBef", " multiplicity PV vs multiplicity T0C", kTH2F, {axisMultFw, axisMult});
+      histos.add("multV0AvsmultT0ABef", " multiplicity V0A vs multiplicity T0A", kTH2F, {axisMultFw, axisMultFw});
+      histos.add("multV0AvsmultT0CBef", " multiplicity V0A vs multiplicity T0C", kTH2F, {axisMultFw, axisMultFw});
 
-      histos.add("vtxCutsAft", "Vtx distribution (after cuts); Vtx z [cm]; Counts", kTH1F, {axisZvert});
-      histos.add("multTrklvsCentAft", "N_{tracklets} vs centrality T0C", kTH2F, {axisCent, axisTracklets});
+        
+      histos.add("vtxCutsAft", "Vtx distribution; Vtx z [cm]; Counts", kTH1F, {axisZvert});
       histos.add("multvsCentAft", " multiplicity vs centrality T0C", kTH2F, {axisCent, axisMult});
+      histos.add("multvsMultT0CAft", " multiplicity vs multiplicity T0C", kTH2F, {axisMultFw, axisMult});
+      histos.add("multvsmultV0AAft", " multiplicity vs multiplicity V0A", kTH2F, {axisMultFw, axisMult});
+      histos.add("multvsmultT0AAft", " multiplicity vs multiplicity T0A", kTH2F, {axisMultFw, axisMult});
+      histos.add("multvsmultTrkPVAft", " multiplicity vs multiplicity PV", kTH2F, {axisMult, axisMult});
       histos.add("multTrkPVvsCentAft", " multiplicity PV vs centrality T0C", kTH2F, {axisCent, axisMult});
+      histos.add("multTrkPVvsMultT0CAft", " multiplicity PV vs multiplicity T0C", kTH2F, {axisMultFw, axisMult});
+      histos.add("multTrkPVvsmultV0AAft", " multiplicity PV vs multiplicity V0A", kTH2F, {axisMultFw, axisMult});
+      histos.add("multTrkPVvsmultT0AAft", " multiplicity PV vs multiplicity T0A", kTH2F, {axisMultFw, axisMult});
       histos.add("multV0AvsCentAft", " multiplicity V0A vs centrality T0C", kTH2F, {axisCent, axisMultFw});
       histos.add("multT0CvsmultT0AAft", " multiplicity T0C vs multiplicity T0A", kTH2F, {axisMultFw, axisMultFw});
-      histos.add("multTrkPVvsMultT0CAft", " multiplicity PV vs multiplicity T0C", kTH2F, {axisMultFw, axisMult});
-      
+      histos.add("multV0AvsmultT0AAft", " multiplicity V0A vs multiplicity T0A", kTH2F, {axisMultFw, axisMultFw});
+      histos.add("multV0AvsmultT0CAft", " multiplicity V0A vs multiplicity T0C", kTH2F, {axisMultFw, axisMultFw});
+
+
       
     histos.add("res", "centrality percentile vs Resolution", kTProfile, {axisCentBins});
     histos.add("QxnA", "centrality percentile vs #LT Q_{x}^{nA} #GT", kTProfile, {axisCentBins});
@@ -238,6 +271,8 @@ struct flow_base {
     histos.add("SinnCPt", "#LT sin(n*#phi) #GT C", kTProfile2D, {{axisPtBins}, {axisCentBins}});
     histos.add("CosnAPt", "#LT cos(n*#phi) #GT A", kTProfile2D, {{axisPtBins}, {axisCentBins}});
     histos.add("CosnCPt", "#LT cos(n*#phi) #GT C", kTProfile2D, {{axisPtBins}, {axisCentBins}});
+      histos.add("PtA", "p_{T} A", kTH2F, {{axisCentBins}, {axisPtBins}});
+      histos.add("PtC", "p_{T} C", kTH2F, {{axisCentBins}, {axisPtBins}});
 
     histos.add("highpt/VnPihighPtA", "v_{n} #pi high p_{T} A", kTProfile2D, {{axisPtBinsHigh}, {axisCentBins}});
     histos.add("highpt/VnPihighPtC", "v_{n} #pi high p_{T} C", kTProfile2D, {{axisPtBinsHigh}, {axisCentBins}});
@@ -245,6 +280,8 @@ struct flow_base {
     histos.add("highpt/SinnPihighPtC", "#LT sin(n*#phi) #GT #pi high p_{T} C", kTProfile2D, {{axisPtBinsHigh}, {axisCentBins}});
     histos.add("highpt/CosnPihighPtA", "#LT cos(n*#phi) #GT #pi high p_{T} A", kTProfile2D, {{axisPtBinsHigh}, {axisCentBins}});
     histos.add("highpt/CosnPihighPtC", "#LT cos(n*#phi) #GT #pi high p_{T} C", kTProfile2D, {{axisPtBinsHigh}, {axisCentBins}});
+      histos.add("highpt/PtPihighA", "p_{T} #pi high p_{T} A", kTH2F, {{axisCentBins}, {axisPtBinsHigh}});
+      histos.add("highpt/PtPihighC", "p_{T} #pi high p_{T} C", kTH2F, {{axisCentBins}, {axisPtBinsHigh}});
 
     histos.add("highpt/VnPhighPtA", "v_{n} proton high p_{T} A", kTProfile2D, {{axisPtBinsHigh}, {axisCentBins}});
     histos.add("highpt/VnPhighPtC", "v_{n} proton high p_{T} C", kTProfile2D, {{axisPtBinsHigh}, {axisCentBins}});
@@ -252,6 +289,8 @@ struct flow_base {
     histos.add("highpt/SinnPhighPtC", "#LT sin(n*#phi) #GT proton high p_{T} C", kTProfile2D, {{axisPtBinsHigh}, {axisCentBins}});
     histos.add("highpt/CosnPhighPtA", "#LT cos(n*#phi) #GT proton high p_{T} A", kTProfile2D, {{axisPtBinsHigh}, {axisCentBins}});
     histos.add("highpt/CosnPhighPtC", "#LT cos(n*#phi) #GT proton high p_{T} C", kTProfile2D, {{axisPtBinsHigh}, {axisCentBins}});
+      histos.add("highpt/PtPhighA", "p_{T} proton high p_{T} A", kTH2F, {{axisCentBins}, {axisPtBinsHigh}});
+      histos.add("highpt/PtPhighC", "p_{T} proton high p_{T} C", kTH2F, {{axisCentBins}, {axisPtBinsHigh}});
 
     histos.add("pions/VnPiA", "v_{n} #pi A", kTProfile2D, {{axisPtBinsLow}, {axisCentBins}});
     histos.add("pions/VnPiC", "v_{n} #pi C", kTProfile2D, {{axisPtBinsLow}, {axisCentBins}});
@@ -259,6 +298,8 @@ struct flow_base {
     histos.add("pions/SinnPiC", "#LT sin(n*#phi) #GT #pi C", kTProfile2D, {{axisPtBinsLow}, {axisCentBins}});
     histos.add("pions/CosnPiA", "#LT cos(n*#phi) #GT #pi A", kTProfile2D, {{axisPtBinsLow}, {axisCentBins}});
     histos.add("pions/CosnPiC", "#LT cos(n*#phi) #GT #pi C", kTProfile2D, {{axisPtBinsLow}, {axisCentBins}});
+      histos.add("pions/PtPiA", "p_{T} #pi A", kTH2F, {{axisCentBins}, {axisPtBinsLow}});
+      histos.add("pions/PtPiC", "p_{T} #pi C", kTH2F, {{axisCentBins}, {axisPtBinsLow}});
 
     histos.add("kaons/VnKA", "v_{n} K A", kTProfile2D, {{axisPtBinsLow}, {axisCentBins}});
     histos.add("kaons/VnKC", "v_{n} K C", kTProfile2D, {{axisPtBinsLow}, {axisCentBins}});
@@ -266,6 +307,8 @@ struct flow_base {
     histos.add("kaons/SinnKC", "#LT sin(n*#phi) #GT K C", kTProfile2D, {{axisPtBinsLow}, {axisCentBins}});
     histos.add("kaons/CosnKA", "#LT cos(n*#phi) #GT K A", kTProfile2D, {{axisPtBinsLow}, {axisCentBins}});
     histos.add("kaons/CosnKC", "#LT cos(n*#phi) #GT K C", kTProfile2D, {{axisPtBinsLow}, {axisCentBins}});
+      histos.add("kaons/PtKA", "p_{T} K A", kTH2F, {{axisCentBins}, {axisPtBinsLow}});
+      histos.add("kaons/PtKC", "p_{T} K C", kTH2F, {{axisCentBins}, {axisPtBinsLow}});
 
     histos.add("protons/VnPA", "v_{n} proton A", kTProfile2D, {{axisPtBinsLow}, {axisCentBins}});
     histos.add("protons/VnPC", "v_{n} proton C", kTProfile2D, {{axisPtBinsLow}, {axisCentBins}});
@@ -273,6 +316,9 @@ struct flow_base {
     histos.add("protons/SinnPC", "#LT sin(n*#phi) #GT proton C", kTProfile2D, {{axisPtBinsLow}, {axisCentBins}});
     histos.add("protons/CosnPA", "#LT cos(n*#phi) #GT proton A", kTProfile2D, {{axisPtBinsLow}, {axisCentBins}});
     histos.add("protons/CosnPC", "#LT cos(n*#phi) #GT proton C", kTProfile2D, {{axisPtBinsLow}, {axisCentBins}});
+      histos.add("protons/PtPA", "p_{T} proton A", kTH2F, {{axisCentBins}, {axisPtBinsLow}});
+      histos.add("protons/PtPC", "p_{T} proton C", kTH2F, {{axisCentBins}, {axisPtBinsLow}});
+      
 
     histos.add("QA/DeltaPi", "#Delta#pi", kTH3F, {{axisPtBinsHigh}, {axisDpi}, {axisCentBins}});
     histos.add("QA/DeltaPiPi", "#Delta#pi pions", kTH3F, {{axisPtBinsHigh}, {axisDpi}, {axisCentBins}});
@@ -294,6 +340,23 @@ struct flow_base {
       
     fPhiCutLow = new TF1("fPhiCutLow", "0.1/x/x+pi/18.0-0.025", 0, 100);
     fPhiCutHigh = new TF1("fPhiCutHigh", "0.12/x+pi/18.0+0.035", 0, 100);
+      
+      
+      fMultPVCutLow = new TF1("fMultPVCutLow", "[0]+[1]*x+[2]*exp([3]-[4]*x) - 1.5*([5]+[6]*exp([7]-[8]*x))", 0, 100);
+      fMultPVCutLow->SetParameters(-1711.7, 12.3933, 5443.58, -0.309964, 0.0207678, -39.6244, 398.077, -0.254616, 0.0210094);
+      
+      fMultPVCutHigh = new TF1("fMultPVCutHigh", "[0]+[1]*x+[2]*exp([3]-[4]*x) + 3.*([5]+[6]*exp([7]-[8]*x))", 0, 100);
+      fMultPVCutHigh->SetParameters(-1711.7, 12.3933, 5443.58, -0.309964, 0.0207678, -39.6244, 398.077, -0.254616, 0.0210094);
+      
+      
+      
+      fMultCutLow = new TF1("fMultCutLow", "[0]+[1]*x+[2]*exp([3]-[4]*x) - 3.5*([5]+[6]*exp([7]-[8]*x))", 0, 100);
+      fMultCutLow->SetParameters(-1376.5, 10.0628, 4540.18, -0.372891, 0.0206561, -74.0855, 358.088, -0.746904, 0.00867761);
+      
+      fMultCutHigh = new TF1("fMultCutHigh", "[0]+[1]*x+[2]*exp([3]-[4]*x) + 3.5*([5]+[6]*exp([7]-[8]*x))", 0, 100);
+      fMultCutHigh->SetParameters(-1376.5, 10.0628, 4540.18, -0.372891, 0.0206561, -74.0855, 358.088, -0.746904, 0.00867761);
+      
+      
 
     ccdb->setURL("http://alice-ccdb.cern.ch");
     ccdb->setCaching(true);
@@ -370,8 +433,7 @@ struct flow_base {
 
       
       auto t0cCentr = collision.centFT0C();
-      
-      auto multTrkls = collision.multTracklets();
+
       auto multV0A = collision.multFV0A();
       auto multT0A = collision.multFT0A();
       auto multT0C = collision.multFT0C();
@@ -381,12 +443,20 @@ struct flow_base {
       
       
       histos.fill(HIST("vtxCutsBef"), zvtx);
-      histos.fill(HIST("multTrklvsCentBef"), t0cCentr, multTrkls);
       histos.fill(HIST("multvsCentBef"), t0cCentr, multTrk);
+      histos.fill(HIST("multvsMultT0CBef"), multT0C, multTrk);
+      histos.fill(HIST("multvsmultV0ABef"), multV0A, multTrk);
+      histos.fill(HIST("multvsmultT0ABef"), multT0A, multTrk);
+      histos.fill(HIST("multvsmultTrkPVBef"), multNTracksPV, multTrk);
       histos.fill(HIST("multTrkPVvsCentBef"), t0cCentr, multNTracksPV);
+      histos.fill(HIST("multTrkPVvsMultT0CBef"), multT0C, multNTracksPV);
+      histos.fill(HIST("multTrkPVvsmultV0ABef"), multV0A, multNTracksPV);
+      histos.fill(HIST("multTrkPVvsmultT0ABef"), multT0A, multNTracksPV);
       histos.fill(HIST("multV0AvsCentBef"), t0cCentr, multV0A);
       histos.fill(HIST("multT0CvsmultT0ABef"), multT0A, multT0C);
-      histos.fill(HIST("multTrkPVvsMultT0CBef"), multT0C, multNTracksPV);
+      histos.fill(HIST("multV0AvsmultT0ABef"), multT0A, multV0A);
+      histos.fill(HIST("multV0AvsmultT0CBef"), multT0C, multV0A);
+
 
       
       if (TMath::Abs(zvtx) > vtxCut)
@@ -395,14 +465,34 @@ struct flow_base {
       if (t0cCentr >= 80. || t0cCentr < 0)
           return;
       
+      if (multNTracksPV < fMultPVCutLow->Eval(t0cCentr))
+          return;
+      
+      if (multNTracksPV > fMultPVCutHigh->Eval(t0cCentr))
+          return;
+      
+      
+      if (multTrk < fMultCutLow->Eval(t0cCentr))
+          return;
+      
+      if (multTrk > fMultCutHigh->Eval(t0cCentr))
+          return;
+      
       
       histos.fill(HIST("vtxCutsAft"), zvtx);
-      histos.fill(HIST("multTrklvsCentAft"), t0cCentr, multTrkls);
       histos.fill(HIST("multvsCentAft"), t0cCentr, multTrk);
+      histos.fill(HIST("multvsMultT0CAft"), multT0C, multTrk);
+      histos.fill(HIST("multvsmultV0AAft"), multV0A, multTrk);
+      histos.fill(HIST("multvsmultT0AAft"), multT0A, multTrk);
+      histos.fill(HIST("multvsmultTrkPVAft"), multNTracksPV, multTrk);
       histos.fill(HIST("multTrkPVvsCentAft"), t0cCentr, multNTracksPV);
+      histos.fill(HIST("multTrkPVvsMultT0CAft"), multT0C, multNTracksPV);
+      histos.fill(HIST("multTrkPVvsmultV0AAft"), multV0A, multNTracksPV);
+      histos.fill(HIST("multTrkPVvsmultT0AAft"), multT0A, multNTracksPV);
       histos.fill(HIST("multV0AvsCentAft"), t0cCentr, multV0A);
       histos.fill(HIST("multT0CvsmultT0AAft"), multT0A, multT0C);
-      histos.fill(HIST("multTrkPVvsMultT0CAft"), multT0C, multNTracksPV);
+      histos.fill(HIST("multV0AvsmultT0AAft"), multT0A, multV0A);
+      histos.fill(HIST("multV0AvsmultT0CAft"), multT0C, multV0A);
       
 
     // process the tracks of a given collision

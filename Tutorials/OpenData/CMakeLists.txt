@@ -20,3 +20,7 @@ o2physics_add_dpl_workflow(flow-analysis3
                   PUBLIC_LINK_LIBRARIES O2::Framework O2Physics::AnalysisCore
                   COMPONENT_NAME AnalysisTutorial)
 
+o2physics_add_dpl_workflow(receffmc3
+                  SOURCES recEffMc3.cxx
+                  PUBLIC_LINK_LIBRARIES O2::Framework O2Physics::AnalysisCore
+                  COMPONENT_NAME AnalysisTutorial)
