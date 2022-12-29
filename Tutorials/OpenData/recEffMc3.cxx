@@ -156,9 +156,9 @@ struct runEffMc {
             zvtx = -999;
         
         if (zvtx < -990)
-            histos.fill(HIST("vtx"), 0);
+            histos.fill(HIST("rec/vtx"), 0);
         else
-            histos.fill(HIST("vtx"), 1);
+            histos.fill(HIST("rec/vtx"), 1);
       
       
         auto multV0A = collision.multFV0A();
