@@ -19,6 +19,7 @@
 #include <TH3.h>
 #include <TH2.h>
 #include <TPDGCode.h>
+#include <TMath.h>
 
 #include <Framework/runDataProcessing.h>
 #include <Framework/AnalysisTask.h>
@@ -100,19 +101,30 @@ struct runEffMc {
         histos.add("rec/DcazQAPrim", "DCAz", kTH1F, {axisDCAz});
         histos.add("rec/DcaxyQAPrim", "DCAxy", kTH1F, {axisDCAxy});
         histos.add("rec/ptEtaPidPrim", "p_{T} vs #eta vs pdg code", kTH3F, {{axisPtBins}, {axisEta}, {axisPid}});
-        histos.add("rec/ptEtaPhiDifPrim", "p_{T} vs #eta vs #varphi (truth - rec)", kTH3F, {{axisDif}, {axisDif}, {axisPhiDif}});
       
         histos.add("rec/ptEtaPhiQASec", "p_{T} vs #eta vs #varphi", kTH3F, {{axisPtBins}, {axisEtaQA}, {axisPhiQA}});
         histos.add("rec/DcazQASec", "DCAz", kTH1F, {axisDCAz});
         histos.add("rec/DcaxyQASec", "DCAxy", kTH1F, {axisDCAxy});
         histos.add("rec/ptEtaPidSec", "p_{T} vs #eta vs pdg code", kTH3F, {{axisPtBins}, {axisEta}, {axisPid}});
+        
+        histos.add("rec/ptEtaPhiQAAll", "p_{T} vs #eta vs #varphi", kTH3F, {{axisPtBins}, {axisEtaQA}, {axisPhiQA}});
+        histos.add("rec/DcazQAAll", "DCAz", kTH1F, {axisDCAz});
+        histos.add("rec/DcaxyQAAll", "DCAxy", kTH1F, {axisDCAxy});
+        histos.add("rec/ptEtaPidAll", "p_{T} vs #eta vs pdg code", kTH3F, {{axisPtBins}, {axisEta}, {axisPid}});
+        histos.add("rec/ptEtaPhiDifAll", "p_{T} vs #eta vs #varphi (truth - rec)", kTH3F, {{axisDif}, {axisDif}, {axisPhiDif}});
       
       
-        histos.add("truth/vtxCorTruthRec", "Vtx distribution;  Vtx z (cm); Vtx z (cm)", kTH2F, {{axisZvert}, {axisZvert}});
+        
+        histos.add("truth/vtxCorTruthRecBef", "Vtx distribution;  Vtx z (cm); Vtx z (cm)", kTH2F, {{axisZvert}, {axisZvert}});
+        histos.add("truth/vtxCorTruthRecAft", "Vtx distribution;  Vtx z (cm); Vtx z (cm)", kTH2F, {{axisZvert}, {axisZvert}});
+        
         histos.add("truth/vtxCutsBefMC", "Vtx distribution; Vtx z [cm]; Counts", kTH1F, {axisZvert});
         histos.add("truth/vtxCutsAftMC", "Vtx distribution; Vtx z [cm]; Counts", kTH1F, {axisZvert});
-        histos.add("truth/ptEtaPhiQAMC", "#eta vs #varphi", kTH3F, {{axisPtBins}, {axisEtaQA}, {axisPhiQA}});
-        histos.add("truth/ptEtaPidMC", "p_{T} vs #eta vs pdg code", kTH3F, {{axisPtBins}, {axisEta}, {axisPid}});
+        
+        histos.add("truth/ptEtaPhiQAPrimMC", "#eta vs #varphi", kTH3F, {{axisPtBins}, {axisEtaQA}, {axisPhiQA}});
+        histos.add("truth/ptEtaPidPrimMC", "p_{T} vs #eta vs pdg code", kTH3F, {{axisPtBins}, {axisEta}, {axisPid}});
+        histos.add("truth/ptEtaPhiQASecMC", "#eta vs #varphi", kTH3F, {{axisPtBins}, {axisEtaQA}, {axisPhiQA}});
+        histos.add("truth/ptEtaPidSecMC", "p_{T} vs #eta vs pdg code", kTH3F, {{axisPtBins}, {axisEta}, {axisPid}});
       
     }
 
@@ -221,38 +233,43 @@ struct runEffMc {
                 Double_t trackdcaxy = track.dcaXY();
                 Double_t trackphi = track.phi();
                 
-                const auto particle = track.mcParticle();
-                const auto pdgCode = particle.pdgCode();
+
+                int pdgCode = TMath::Abs(track.mcParticle().pdgCode());
                 Int_t pidCode = getPidCode(pdgCode);
                 
-                if (particle.isPhysicalPrimary()) {
-                    
-                    histos.fill(HIST("rec/ptEtaPhiQAPrim"), trackpt, tracketa, trackphi);
-                    histos.fill(HIST("rec/DcazQAPrim"), trackdcaz);
-                    histos.fill(HIST("rec/DcaxyQAPrim"), trackdcaxy);
-                    histos.fill(HIST("rec/ptEtaPidPrim"), trackpt, tracketa, pidCode);
-                    
-                    Double_t parteta = particle.eta();
-                    Double_t partpt = particle.pt();
-                    Double_t partphi = particle.phi();
-                    
-                    Double_t etaDif = parteta - tracketa;
-                    Double_t ptDif = partpt - trackpt;
-                    Double_t phiDif = partphi - trackphi;
-                    if (phiDif > TMath::Pi())
-                        phiDif -= 2.*TMath::Pi();
-                    if (phiDif < -TMath::Pi())
-                        phiDif += 2.*TMath::Pi();
-                    histos.fill(HIST("rec/ptEtaPhiDifPrim"), ptDif, etaDif, phiDif);
-                    
-                } else {
+                if (!(track.mcParticle().isPhysicalPrimary())) {
                     
                     histos.fill(HIST("rec/ptEtaPhiQASec"), trackpt, tracketa, trackphi);
                     histos.fill(HIST("rec/DcazQASec"), trackdcaz);
                     histos.fill(HIST("rec/DcaxyQASec"), trackdcaxy);
                     histos.fill(HIST("rec/ptEtaPidSec"), trackpt, tracketa, pidCode);
+                                        
+                } else {
                     
+                    histos.fill(HIST("rec/ptEtaPhiQAPrim"), trackpt, tracketa, trackphi);
+                    histos.fill(HIST("rec/DcazQAPrim"), trackdcaz);
+                    histos.fill(HIST("rec/DcaxyQAPrim"), trackdcaxy);
+                    histos.fill(HIST("rec/ptEtaPidPrim"), trackpt, tracketa, pidCode);
+                                        
                 }
+                
+                histos.fill(HIST("rec/ptEtaPhiQAAll"), trackpt, tracketa, trackphi);
+                histos.fill(HIST("rec/DcazQAAll"), trackdcaz);
+                histos.fill(HIST("rec/DcaxyQAAll"), trackdcaxy);
+                histos.fill(HIST("rec/ptEtaPidAll"), trackpt, tracketa, pidCode);
+                
+                Double_t parteta = track.mcParticle().eta();
+                Double_t partpt = track.mcParticle().pt();
+                Double_t partphi = track.mcParticle().phi();
+                
+                Double_t etaDif = parteta - tracketa;
+                Double_t ptDif = partpt - trackpt;
+                Double_t phiDif = partphi - trackphi;
+                if (phiDif > TMath::Pi())
+                    phiDif -= 2.*TMath::Pi();
+                if (phiDif < -TMath::Pi())
+                    phiDif += 2.*TMath::Pi();
+                histos.fill(HIST("rec/ptEtaPhiDifAll"), ptDif, etaDif, phiDif);
                 
             }
             
@@ -263,31 +280,33 @@ struct runEffMc {
         //truth
         float zvtxMC = collision.mcCollision().posZ();
 
-        histos.fill(HIST("truth/vtxCorTruthRec"), zvtxMC, zvtx);
+        histos.fill(HIST("truth/vtxCorTruthRecBef"), zvtxMC, zvtx);
         histos.fill(HIST("truth/vtxCutsBefMC"), zvtxMC);
         
         if (TMath::Abs(zvtxMC) <= vtxCut) {
             
+            histos.fill(HIST("truth/vtxCorTruthRecAft"), zvtxMC, zvtx);
             histos.fill(HIST("truth/vtxCutsAftMC"), zvtxMC);
             
             for (auto& mcPart : mcParticles) {
             
                 Double_t ptPart = mcPart.pt();
                 Double_t etaPart = mcPart.eta();
+                Double_t phiPart = mcPart.phi();
 
                 if (TMath::Abs(etaPart) >= etaCut || ptPart < minPt || ptPart >= maxPt)
                     continue;
-               
-                if (!(mcPart.isPhysicalPrimary()))
-                    continue;
                 
-                Double_t phiPart = mcPart.phi();
-
-                const auto pdgCodeMC = mcPart.pdgCode();
+                int pdgCodeMC = TMath::Abs(mcPart.pdgCode());
                 Int_t pidCodeMC = getPidCode(pdgCodeMC);
-                
-                histos.fill(HIST("truth/ptEtaPhiQAMC"), ptPart, etaPart, phiPart);
-                histos.fill(HIST("truth/ptEtaPidMC"), ptPart, etaPart, pidCodeMC);
+                               
+                if (mcPart.isPhysicalPrimary()){
+                    histos.fill(HIST("truth/ptEtaPhiQAPrimMC"), ptPart, etaPart, phiPart);
+                    histos.fill(HIST("truth/ptEtaPidPrimMC"), ptPart, etaPart, pidCodeMC);
+                } else {
+                    histos.fill(HIST("truth/ptEtaPhiQASecMC"), ptPart, etaPart, phiPart);
+                    histos.fill(HIST("truth/ptEtaPidSecMC"), ptPart, etaPart, pidCodeMC);
+                }
 
             }
                     
