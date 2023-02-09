@@ -36,12 +36,13 @@ using namespace o2::framework::expressions;
 
 struct runEffMc {
 
-    using Colls = soa::Join<aod::Collisions, aod::Mults, aod::McCollisionLabels>;
+    using Colls = soa::Join<aod::Collisions, aod::Mults, aod::EvSels, aod::McCollisionLabels>;
     using TrackCandidates = soa::Join<aod::Tracks, aod::TracksExtra, aod::TracksDCA, aod::TrackSelection, aod::McTrackLabels>;
     using FilteredTracks = soa::Filtered<TrackCandidates>;
     Filter trackFilter = (requireGlobalTrackInFilter());
 
     
+    Configurable<int> eventSelection{"eventSelection", 1, "event selection"};
     Configurable<bool> crsRowsFrcShCls{"crsRowsFrcShCls", false, "crsRowsFrcShCl"};
     Configurable<float> vtxCut{"vtxCut", 10.0, "Z vertex cut"};
     Configurable<float> etaCut{"etaCut", 0.8, "Eta cut"};
@@ -58,6 +59,7 @@ struct runEffMc {
       
         AxisSpec axisVtxcounts{2, -0.5f, 1.5f, "Vtx info (0=no, 1=yes)"};
         AxisSpec axisZvert{120, -30.f, 30.f, "Vtx z (cm)"};
+        AxisSpec axisXYvert{200, -10.f, 10.f, "Vtx (cm)"};
         AxisSpec axisPtBins{{0., 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.25, 2.5, 2.75, 3.0, 3.5, 4.0, 4.5, 5.0, 6.0, 8.0, 10., 13., 16., 20.}, "p_{T} (GeV/c)"};
         AxisSpec axisEta{16, -0.8f, 0.8f, "#eta"};
         AxisSpec axisPid{7, 0.f, 7.f, "pid (pdg code)"};
@@ -66,7 +68,7 @@ struct runEffMc {
         AxisSpec axisDCAz{500, -10.f, 10.f, "DCA_{z}"};
         AxisSpec axisDCAxy{500, -10.f, 10.f, "DCA_{xy}"};
         AxisSpec axisMultFw{1000, 0.f, 200000.f, "multiplicity_fw"};
-        AxisSpec axisMult{1000, 0.f, 4000.f, "multiplicity"};
+        AxisSpec axisMult{2000, 0.f, 10000.f, "multiplicity"};
         AxisSpec axisDif{250, -2.5f, 2.5f, "truth - rec"};
         AxisSpec axisPhiDif{100, -TMath::Pi(), TMath::Pi(), "truth - rec"};
 
@@ -74,6 +76,10 @@ struct runEffMc {
         histos.add("rec/vtx", "Vtx info (0=no, 1=yes); Vtx; Counts", kTH1I, {axisVtxcounts});
       
         histos.add("rec/vtxCutsBef", "Vtx distribution; Vtx z [cm]; Counts", kTH1F, {axisZvert});
+        histos.add("rec/vtxZCorTruthRecBef", "Vtx distribution;  Vtx z (cm); Vtx z (cm)", kTH2F, {axisZvert, axisZvert});
+        histos.add("rec/vtxXCorTruthRecBef", "Vtx distribution;  Vtx x (cm); Vtx x (cm)", kTH2F, {axisXYvert, axisXYvert});
+        histos.add("rec/vtxYCorTruthRecBef", "Vtx distribution;  Vtx y (cm); Vtx y (cm)", kTH2F, {axisXYvert, axisXYvert});
+
         histos.add("rec/multvsMultT0CBef", " multiplicity vs multiplicity T0C", kTH2F, {axisMultFw, axisMult});
         histos.add("rec/multvsmultV0ABef", " multiplicity vs multiplicity V0A", kTH2F, {axisMultFw, axisMult});
         histos.add("rec/multvsmultT0ABef", " multiplicity vs multiplicity T0A", kTH2F, {axisMultFw, axisMult});
@@ -108,10 +114,7 @@ struct runEffMc {
         histos.add("rec/DcaxyQASec", "DCAxy", kTH1F, {axisDCAxy});
         histos.add("rec/ptEtaPidSec", "p_{T} vs #eta vs pdg code", kTH3F, {{axisPtBins}, {axisEta}, {axisPid}});
   
-        
-        histos.add("truth/vtxCorTruthRecBef", "Vtx distribution;  Vtx z (cm); Vtx z (cm)", kTH2F, {{axisZvert}, {axisZvert}});
-        histos.add("truth/vtxCorTruthRecAft", "Vtx distribution;  Vtx z (cm); Vtx z (cm)", kTH2F, {{axisZvert}, {axisZvert}});
-        
+                
         histos.add("truth/vtxCutsBefMC", "Vtx distribution; Vtx z [cm]; Counts", kTH1F, {axisZvert});
         histos.add("truth/vtxCutsAftMC", "Vtx distribution; Vtx z [cm]; Counts", kTH1F, {axisZvert});
         
@@ -146,132 +149,148 @@ struct runEffMc {
     }
  
     
-    
-    void process(Colls::iterator const& collision, FilteredTracks const& tracks, aod::McCollisions const& mcCollisions, aod::McParticles& mcParticles)
+    Preslice<o2::aod::Tracks> perCollision = o2::aod::track::collisionId;
+    void process(aod::McCollision const& mcCollision, o2::soa::SmallGroups<Colls> const& collisions, FilteredTracks const& tracks, aod::McParticles& mcParticles)
     {
-
-        float zvtx = collision.posZ();
-        /*
-        float zRes = TMath::Sqrt(collision.covZZ());
-        if ((collision.numContrib() < 2) || (zRes > 0.25 && collision.numContrib() < 20))
-            zvtx = -999;
-         */
-        if (collision.numContrib() < 2)
-            zvtx = -999;
         
-        if (zvtx < -990)
-            histos.fill(HIST("rec/vtx"), 0);
-        else
-            histos.fill(HIST("rec/vtx"), 1);
-      
-      
-        auto multV0A = collision.multFV0A();
-        auto multT0A = collision.multFT0A();
-        auto multT0C = collision.multFT0C();
-        auto multNTracksPV = collision.multNTracksPV();
-        auto multTrk = tracks.size();
-      
-        histos.fill(HIST("rec/vtxCutsBef"), zvtx);
-        histos.fill(HIST("rec/multvsMultT0CBef"), multT0C, multTrk);
-        histos.fill(HIST("rec/multvsmultV0ABef"), multV0A, multTrk);
-        histos.fill(HIST("rec/multvsmultT0ABef"), multT0A, multTrk);
-        histos.fill(HIST("rec/multvsmultTrkPVBef"), multNTracksPV, multTrk);
-        histos.fill(HIST("rec/multTrkPVvsMultT0CBef"), multT0C, multNTracksPV);
-        histos.fill(HIST("rec/multTrkPVvsmultV0ABef"), multV0A, multNTracksPV);
-        histos.fill(HIST("rec/multTrkPVvsmultT0ABef"), multT0A, multNTracksPV);
-        histos.fill(HIST("rec/multT0CvsmultT0ABef"), multT0A, multT0C);
-        histos.fill(HIST("rec/multV0AvsmultT0ABef"), multT0A, multV0A);
-        histos.fill(HIST("rec/multV0AvsmultT0CBef"), multT0C, multV0A);
-
-
-        if (TMath::Abs(zvtx) <= vtxCut) {
+        float zvtxMC = mcCollision.posZ();
+        
+        
+        for (const auto& collision : collisions) {
             
-            histos.fill(HIST("rec/vtxCutsAft"), zvtx);
-            histos.fill(HIST("rec/multvsMultT0CAft"), multT0C, multTrk);
-            histos.fill(HIST("rec/multvsmultV0AAft"), multV0A, multTrk);
-            histos.fill(HIST("rec/multvsmultT0AAft"), multT0A, multTrk);
-            histos.fill(HIST("rec/multvsmultTrkPVAft"), multNTracksPV, multTrk);
-            histos.fill(HIST("rec/multTrkPVvsMultT0CAft"), multT0C, multNTracksPV);
-            histos.fill(HIST("rec/multTrkPVvsmultV0AAft"), multV0A, multNTracksPV);
-            histos.fill(HIST("rec/multTrkPVvsmultT0AAft"), multT0A, multNTracksPV);
-            histos.fill(HIST("rec/multT0CvsmultT0AAft"), multT0A, multT0C);
-            histos.fill(HIST("rec/multV0AvsmultT0AAft"), multT0A, multV0A);
-            histos.fill(HIST("rec/multV0AvsmultT0CAft"), multT0C, multV0A);
+            if ((eventSelection == 1) && (!collision.sel8())) {
+                // LOGF(info, "Collision index : %d skipped not selected", collision.index());
+                continue;
+            }
+            
+            
+            float zvtx = collision.posZ();
+            /*
+             float zRes = TMath::Sqrt(collision.covZZ());
+             if ((collision.numContrib() < 2) || (zRes > 0.25 && collision.numContrib() < 20))
+             zvtx = -999;
+             */
+            if (collision.numContrib() < 2)
+                zvtx = -999;
+        
+            if (zvtx < -990)
+                histos.fill(HIST("rec/vtx"), 0);
+            else
+                histos.fill(HIST("rec/vtx"), 1);
+      
+      
+            auto multV0A = collision.multFV0A();
+            auto multT0A = collision.multFT0A();
+            auto multT0C = collision.multFT0C();
+            auto multNTracksPV = collision.multNTracksPV();
+            //auto multTrk = tracks.size();
+            
+            const auto groupedTracks = tracks.sliceBy(perCollision, collision.globalIndex());
+            auto multGrTrks = groupedTracks.size();
+      
+            histos.fill(HIST("rec/vtxCutsBef"), zvtx);
+            histos.fill(HIST("rec/multvsMultT0CBef"), multT0C, multGrTrks);
+            histos.fill(HIST("rec/multvsmultV0ABef"), multV0A, multGrTrks);
+            histos.fill(HIST("rec/multvsmultT0ABef"), multT0A, multGrTrks);
+            histos.fill(HIST("rec/multvsmultTrkPVBef"), multNTracksPV, multGrTrks);
+            histos.fill(HIST("rec/multTrkPVvsMultT0CBef"), multT0C, multNTracksPV);
+            histos.fill(HIST("rec/multTrkPVvsmultV0ABef"), multV0A, multNTracksPV);
+            histos.fill(HIST("rec/multTrkPVvsmultT0ABef"), multT0A, multNTracksPV);
+            histos.fill(HIST("rec/multT0CvsmultT0ABef"), multT0A, multT0C);
+            histos.fill(HIST("rec/multV0AvsmultT0ABef"), multT0A, multV0A);
+            histos.fill(HIST("rec/multV0AvsmultT0CBef"), multT0C, multV0A);
+            
+            histos.fill(HIST("rec/vtxZCorTruthRecBef"), zvtxMC, zvtx);
+            histos.fill(HIST("rec/vtxXCorTruthRecBef"), mcCollision.posX(), collision.posX());
+            histos.fill(HIST("rec/vtxYCorTruthRecBef"), mcCollision.posY(), collision.posY());
+
+
+            if (TMath::Abs(zvtx) <= vtxCut) {
+                            
+                histos.fill(HIST("rec/vtxCutsAft"), zvtx);
+                histos.fill(HIST("rec/multvsMultT0CAft"), multT0C, multGrTrks);
+                histos.fill(HIST("rec/multvsmultV0AAft"), multV0A, multGrTrks);
+                histos.fill(HIST("rec/multvsmultT0AAft"), multT0A, multGrTrks);
+                histos.fill(HIST("rec/multvsmultTrkPVAft"), multNTracksPV, multGrTrks);
+                histos.fill(HIST("rec/multTrkPVvsMultT0CAft"), multT0C, multNTracksPV);
+                histos.fill(HIST("rec/multTrkPVvsmultV0AAft"), multV0A, multNTracksPV);
+                histos.fill(HIST("rec/multTrkPVvsmultT0AAft"), multT0A, multNTracksPV);
+                histos.fill(HIST("rec/multT0CvsmultT0AAft"), multT0A, multT0C);
+                histos.fill(HIST("rec/multV0AvsmultT0AAft"), multT0A, multV0A);
+                histos.fill(HIST("rec/multV0AvsmultT0CAft"), multT0C, multV0A);
 
             
-            for (auto& track : tracks) {
+                for (const auto& track : groupedTracks) {
 
-                Double_t trackpt = track.pt();
-                Double_t tracketa = track.eta();
+                    Double_t trackpt = track.pt();
+                    Double_t tracketa = track.eta();
 
-                if (TMath::Abs(tracketa) >= etaCut || track.tpcNClsFound() < noClus || trackpt < minPt || trackpt >= maxPt)
-                    continue;
+                    if (TMath::Abs(tracketa) >= etaCut || track.tpcNClsFound() < noClus || trackpt < minPt || trackpt >= maxPt)
+                        continue;
                 
                 
-                if (crsRowsFrcShCls) {
-                  Float_t nrowscr = track.tpcNClsCrossedRows();
-                  if (nrowscr < 120)
-                    continue;
+                    if (crsRowsFrcShCls) {
+                        Float_t nrowscr = track.tpcNClsCrossedRows();
+                        if (nrowscr < 120)
+                            continue;
 
-                  Float_t clsFind = track.tpcNClsFindable();
-                  if (clsFind <= 0)
-                    continue;
+                        Float_t clsFind = track.tpcNClsFindable();
+                        if (clsFind <= 0)
+                            continue;
 
-                  if (track.tpcCrossedRowsOverFindableCls() < 0.9)
-                    continue;
-                }
+                        if (track.tpcCrossedRowsOverFindableCls() < 0.9)
+                            continue;
+                    }
                 
-                Double_t trackdcaz = track.dcaZ();
-                Double_t trackdcaxy = track.dcaXY();
-                Double_t trackphi = track.phi();
-                
-                int pdgCode = TMath::Abs(track.mcParticle().pdgCode());
-                Int_t pidCode = getPidCode(pdgCode);
+                    Double_t trackdcaz = track.dcaZ();
+                    Double_t trackdcaxy = track.dcaXY();
+                    Double_t trackphi = track.phi();
+
+                    int pdgCode = TMath::Abs(track.mcParticle().pdgCode());
+                    Int_t pidCode = getPidCode(pdgCode);
                                     
-                if (track.mcParticle().isPhysicalPrimary()) {
+                    if (track.mcParticle().isPhysicalPrimary()) {
                  
-                    histos.fill(HIST("rec/ptEtaPhiQAPrim"), trackpt, tracketa, trackphi);
-                    histos.fill(HIST("rec/DcazQAPrim"), trackdcaz);
-                    histos.fill(HIST("rec/DcaxyQAPrim"), trackdcaxy);
-                    histos.fill(HIST("rec/ptEtaPidPrim"), trackpt, tracketa, pidCode);
+                        histos.fill(HIST("rec/ptEtaPhiQAPrim"), trackpt, tracketa, trackphi);
+                        histos.fill(HIST("rec/DcazQAPrim"), trackdcaz);
+                        histos.fill(HIST("rec/DcaxyQAPrim"), trackdcaxy);
+                        histos.fill(HIST("rec/ptEtaPidPrim"), trackpt, tracketa, pidCode);
                       
-                    Double_t parteta = track.mcParticle().eta();
-                    Double_t partpt = track.mcParticle().pt();
-                    Double_t partphi = track.mcParticle().phi();
+                        Double_t parteta = track.mcParticle().eta();
+                        Double_t partpt = track.mcParticle().pt();
+                        Double_t partphi = track.mcParticle().phi();
                     
-                    Double_t etaDif = parteta - tracketa;
-                    Double_t ptDif = partpt - trackpt;
-                    Double_t phiDif = partphi - trackphi;
-                    if (phiDif > TMath::Pi())
-                        phiDif -= 2.*TMath::Pi();
-                    if (phiDif < -TMath::Pi())
-                        phiDif += 2.*TMath::Pi();
-                    histos.fill(HIST("rec/ptEtaPhiDifPrim"), ptDif, etaDif, phiDif);
+                        Double_t etaDif = parteta - tracketa;
+                        Double_t ptDif = partpt - trackpt;
+                        Double_t phiDif = partphi - trackphi;
+                        if (phiDif > TMath::Pi())
+                            phiDif -= 2.*TMath::Pi();
+                        if (phiDif < -TMath::Pi())
+                            phiDif += 2.*TMath::Pi();
+                        histos.fill(HIST("rec/ptEtaPhiDifPrim"), ptDif, etaDif, phiDif);
                     
-                } else {
+                    } else {
                     
-                    histos.fill(HIST("rec/ptEtaPhiQASec"), trackpt, tracketa, trackphi);
-                    histos.fill(HIST("rec/DcazQASec"), trackdcaz);
-                    histos.fill(HIST("rec/DcaxyQASec"), trackdcaxy);
-                    histos.fill(HIST("rec/ptEtaPidSec"), trackpt, tracketa, pidCode);
+                        histos.fill(HIST("rec/ptEtaPhiQASec"), trackpt, tracketa, trackphi);
+                        histos.fill(HIST("rec/DcazQASec"), trackdcaz);
+                        histos.fill(HIST("rec/DcaxyQASec"), trackdcaxy);
+                        histos.fill(HIST("rec/ptEtaPidSec"), trackpt, tracketa, pidCode);
                     
-                }
+                    }
                 
+                }
+            
             }
             
         }
-        
+       
         
         
         //truth
-        float zvtxMC = collision.mcCollision().posZ();
-
-        histos.fill(HIST("truth/vtxCorTruthRecBef"), zvtxMC, zvtx);
         histos.fill(HIST("truth/vtxCutsBefMC"), zvtxMC);
         
         if (TMath::Abs(zvtxMC) <= vtxCut) {
-            
-            histos.fill(HIST("truth/vtxCorTruthRecAft"), zvtxMC, zvtx);
+
             histos.fill(HIST("truth/vtxCutsAftMC"), zvtxMC);
             
             for (auto& mcPart : mcParticles) {
@@ -297,6 +316,7 @@ struct runEffMc {
         }
         
     }
+    
 };
 
 WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
