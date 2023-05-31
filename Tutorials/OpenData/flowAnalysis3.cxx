@@ -341,7 +341,8 @@ struct flow_base {
     fPhiCutLow = new TF1("fPhiCutLow", "0.1/x/x+pi/18.0-0.025", 0, 100);
     fPhiCutHigh = new TF1("fPhiCutHigh", "0.12/x+pi/18.0+0.035", 0, 100);
       
-      
+      /*
+       //apass4
       fMultPVCutLow = new TF1("fMultPVCutLow", "[0]+[1]*x+[2]*exp([3]-[4]*x) - 1.5*([5]+[6]*exp([7]-[8]*x))", 0, 100);
       fMultPVCutLow->SetParameters(-1711.7, 12.3933, 5443.58, -0.309964, 0.0207678, -39.6244, 398.077, -0.254616, 0.0210094);
       
@@ -355,6 +356,23 @@ struct flow_base {
       
       fMultCutHigh = new TF1("fMultCutHigh", "[0]+[1]*x+[2]*exp([3]-[4]*x) + 3.5*([5]+[6]*exp([7]-[8]*x))", 0, 100);
       fMultCutHigh->SetParameters(-1376.5, 10.0628, 4540.18, -0.372891, 0.0206561, -74.0855, 358.088, -0.746904, 0.00867761);
+      */
+      
+      
+      fMultPVCutLow = new TF1("fMultPVCutLow", "[0]+[1]*x+[2]*x*x+[3]*x*x*x - 2.5*([4]+[5]*x+[6]*x*x+[7]*x*x*x+[8]*x*x*x*x)", 0, 100);
+      fMultPVCutLow->SetParameters(2821.65, -86.2355, 0.900795, -0.0032178, 367.538, -15.6357, 0.35541, -0.00407947, 1.74792e-05);
+      
+      fMultPVCutHigh = new TF1("fMultPVCutHigh", "[0]+[1]*x+[2]*x*x+[3]*x*x*x + 2.5*([4]+[5]*x+[6]*x*x+[7]*x*x*x+[8]*x*x*x*x)", 0, 100);
+      fMultPVCutHigh->SetParameters(2821.65, -86.2355, 0.900795, -0.0032178, 367.538, -15.6357, 0.35541, -0.00407947, 1.74792e-05);
+      
+      
+      
+      fMultCutLow = new TF1("fMultCutLow", "[0]+[1]*x+[2]*exp([3]-[4]*x) - 2.5*([5]+[6]*x)", 0, 100);
+      fMultCutLow->SetParameters(-2873.81, 19.3377, 6235.2, -0.265518, 0.0157396, 111.674, -1.2196);
+      
+      fMultCutHigh = new TF1("fMultCutHigh", "[0]+[1]*x+[2]*exp([3]-[4]*x) + 3.5*([5]+[6]*x)", 0, 100);
+      fMultCutHigh->SetParameters(-2873.81, 19.3377, 6235.2, -0.265518, 0.0157396, 111.674, -1.2196);
+      
       
       
 
