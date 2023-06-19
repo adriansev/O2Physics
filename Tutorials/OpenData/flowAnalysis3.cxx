@@ -240,6 +240,7 @@ struct flow_base {
       histos.add("multT0CvsmultT0ABef", " multiplicity T0C vs multiplicity T0A", kTH2F, {axisMultFw, axisMultFw});
       histos.add("multV0AvsmultT0ABef", " multiplicity V0A vs multiplicity T0A", kTH2F, {axisMultFw, axisMultFw});
       histos.add("multV0AvsmultT0CBef", " multiplicity V0A vs multiplicity T0C", kTH2F, {axisMultFw, axisMultFw});
+      histos.add("multT0CvsCentBef", " multiplicity T0C vs centrality T0C", kTH2F, {axisCent, axisMultFw});
 
         
       histos.add("vtxCutsAft", "Vtx distribution; Vtx z [cm]; Counts", kTH1F, {axisZvert});
@@ -256,7 +257,7 @@ struct flow_base {
       histos.add("multT0CvsmultT0AAft", " multiplicity T0C vs multiplicity T0A", kTH2F, {axisMultFw, axisMultFw});
       histos.add("multV0AvsmultT0AAft", " multiplicity V0A vs multiplicity T0A", kTH2F, {axisMultFw, axisMultFw});
       histos.add("multV0AvsmultT0CAft", " multiplicity V0A vs multiplicity T0C", kTH2F, {axisMultFw, axisMultFw});
-
+      histos.add("multT0CvsCentAft", " multiplicity T0C vs centrality T0C", kTH2F, {axisCent, axisMultFw});
 
       
     histos.add("res", "centrality percentile vs Resolution", kTProfile, {axisCentBins});
@@ -474,6 +475,7 @@ struct flow_base {
       histos.fill(HIST("multT0CvsmultT0ABef"), multT0A, multT0C);
       histos.fill(HIST("multV0AvsmultT0ABef"), multT0A, multV0A);
       histos.fill(HIST("multV0AvsmultT0CBef"), multT0C, multV0A);
+      histos.fill(HIST("multT0CvsCentBef"), t0cCentr, multT0C);
 
 
       
@@ -511,8 +513,9 @@ struct flow_base {
       histos.fill(HIST("multT0CvsmultT0AAft"), multT0A, multT0C);
       histos.fill(HIST("multV0AvsmultT0AAft"), multT0A, multV0A);
       histos.fill(HIST("multV0AvsmultT0CAft"), multT0C, multV0A);
-      
+      histos.fill(HIST("multT0CvsCentAft"), t0cCentr, multT0C);
 
+      
     // process the tracks of a given collision
     Double_t QxnGapA = 0., QynGapA = 0.;
     Double_t QxnGapC = 0., QynGapC = 0.;
