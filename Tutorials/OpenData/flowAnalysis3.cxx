@@ -70,7 +70,7 @@ struct flow_base {
   Configurable<float> minPCut{"minPCut", -25.0, "Minimum P cut"};
   Configurable<float> maxPCut{"maxPCut", -15.0, "Maximum P cut"};
   Configurable<float> nsigCut{"nsigCut", 3.0, "Nsigma cut for PID"};
-    Configurable<float> magField{"magField", 99999, "Configurable magnetic field; default will CCDB will be queried"};
+  Configurable<float> magField{"magField", 99999, "Configurable magnetic field; default will CCDB will be queried"};
 
     
   TF1* fPhiCutLow = nullptr;
@@ -81,6 +81,10 @@ struct flow_base {
     
     TF1* fMultCutLow = nullptr;
     TF1* fMultCutHigh = nullptr;
+    
+    TF1* fMultMultPVCut = nullptr;
+    
+    
 
   Service<o2::ccdb::BasicCCDBManager> ccdb;
 
@@ -222,7 +226,7 @@ struct flow_base {
       AxisSpec axisDCAxy{100, -0.5f, 0.5f, "DCA_{xy}"};
       AxisSpec axisMultFw{1000, 0, 200000, "mult"};
       AxisSpec axisMult{1000, 0.f, 4000.f, "multiplicity"};
-      
+      AxisSpec axisPhiMod{100, 0.f, 1.f, "phiMod"};
 
       histos.add("vtx", "Vtx info (0=no, 1=yes); Vtx; Counts", kTH1I, {axisVtxcounts});
       
@@ -338,6 +342,9 @@ struct flow_base {
       histos.add("QA/QADCAzAft", "DCAz (after cuts)", kTH2F, {{axisDCAz}, {axisCentBins}});
       histos.add("QA/QADCAxyAft", "DCAxy (after cuts)", kTH2F, {{axisDCAxy}, {axisCentBins}});
 
+      histos.add("QA/QAPhiModPt", "PhiMod (after cuts)", kTH2F, {{axisPtBins}, {axisPhiMod}});
+      
+      
       
     fPhiCutLow = new TF1("fPhiCutLow", "0.1/x/x+pi/18.0-0.025", 0, 100);
     fPhiCutHigh = new TF1("fPhiCutHigh", "0.12/x+pi/18.0+0.035", 0, 100);
@@ -374,6 +381,10 @@ struct flow_base {
       fMultCutHigh = new TF1("fMultCutHigh", "[0]+[1]*x+[2]*exp([3]-[4]*x) + 3.5*([5]+[6]*x)", 0, 100);
       fMultCutHigh->SetParameters(-2873.81, 19.3377, 6235.2, -0.265518, 0.0157396, 111.674, -1.2196);
       
+      
+      
+      fMultMultPVCut = new TF1("fMultMultPVCut", "[0]+[1]*x+[2]*x*x", 0, 5000);
+      fMultMultPVCut->SetParameters(-0.1, 0.78, -4.7e-05);
       
       
 
@@ -425,6 +436,15 @@ struct flow_base {
 
     auto getDoubleCountingP = [&](Double_t nSp, Short_t minNSigma) { return (nSp < nsigCut && minNSigma != 3); };
 
+      
+      
+    //new cut: remove collisions with TRD trigger
+    if (collision.alias_bit(kTVXinTRD)) {
+        // TRD triggered
+        return;
+    }
+      
+      
     if ((eventSelection == 1) && (!collision.sel8())) {
       // LOGF(info, "Collision index : %d skipped not selected", collision.index());
       return;
@@ -498,6 +518,11 @@ struct flow_base {
       if (multTrk > fMultCutHigh->Eval(t0cCentr))
           return;
       
+      //new cut
+      if (multTrk > fMultMultPVCut->Eval(multNTracksPV))
+          return;
+      
+
       
       histos.fill(HIST("vtxCutsAft"), zvtx);
       histos.fill(HIST("multvsCentAft"), t0cCentr, multTrk);
@@ -597,8 +622,10 @@ struct flow_base {
 
         phimod += TMath::Pi() / 18.0; // to center gap in the middle
         phimod = fmod(phimod, TMath::Pi() / 9.0);
-        if (phimod < fPhiCutHigh->Eval(trackpt) && phimod > fPhiCutLow->Eval(trackpt))
-          continue; // reject track
+        //if (phimod < fPhiCutHigh->Eval(trackpt) && phimod > fPhiCutLow->Eval(trackpt))
+        //  continue; // reject track
+          
+        histos.fill(HIST("QA/QAPhiModPt"), trackpt, phimod);
       }
 
       if (crsRowsFrcShCls) {
