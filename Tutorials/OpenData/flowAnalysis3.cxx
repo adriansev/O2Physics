@@ -47,8 +47,8 @@ struct flow_base {
   using TracksPID = soa::Join<aod::pidTPCFullPi, aod::pidTPCFullKa, aod::pidTPCFullPr, aod::pidTOFFullPi, aod::pidTOFFullKa, aod::pidTOFFullPr, aod::pidTOFbeta>;
   using TrackCandidates = soa::Join<aod::Tracks, aod::TracksExtra, aod::TracksDCA, aod::TrackSelection, TracksPID>;
   using FilteredTracks = soa::Filtered<TrackCandidates>;
-    //Filter trackFilter = ((requireGlobalTrackInFilter()) || (aod::track::isGlobalTrackSDD == (uint8_t) true));
-    Filter trackFilter = (requireGlobalTrackInFilter());
+    Filter trackFilter = ((requireGlobalTrackInFilter()) || (aod::track::isGlobalTrackSDD == (uint8_t) true));
+    //Filter trackFilter = (requireGlobalTrackInFilter());
 
   Configurable<int> eventSelection{"eventSelection", 1, "event selection"};
   Configurable<bool> phiCut{"phiCut", false, "activate phi cut"};
@@ -70,7 +70,7 @@ struct flow_base {
   Configurable<float> minPCut{"minPCut", -25.0, "Minimum P cut"};
   Configurable<float> maxPCut{"maxPCut", -15.0, "Maximum P cut"};
   Configurable<float> nsigCut{"nsigCut", 3.0, "Nsigma cut for PID"};
-  Configurable<float> magField{"magField", 99999, "Configurable magnetic field; default will CCDB will be queried"};
+  Configurable<float> magField{"magField", 99999, "Configurable magnetic field; default CCDB will be queried"};
 
     
   TF1* fPhiCutLow = nullptr;
@@ -226,7 +226,7 @@ struct flow_base {
       AxisSpec axisDCAxy{100, -0.5f, 0.5f, "DCA_{xy}"};
       AxisSpec axisMultFw{1000, 0, 200000, "mult"};
       AxisSpec axisMult{1000, 0.f, 4000.f, "multiplicity"};
-      AxisSpec axisPhiMod{100, 0.f, 1.f, "phiMod"};
+      AxisSpec axisPhiMod{100, 0.f, 0.4f, "phiMod"};
 
       histos.add("vtx", "Vtx info (0=no, 1=yes); Vtx; Counts", kTH1I, {axisVtxcounts});
       
@@ -342,31 +342,14 @@ struct flow_base {
       histos.add("QA/QADCAzAft", "DCAz (after cuts)", kTH2F, {{axisDCAz}, {axisCentBins}});
       histos.add("QA/QADCAxyAft", "DCAxy (after cuts)", kTH2F, {{axisDCAxy}, {axisCentBins}});
 
-      histos.add("QA/QAPhiModPt", "PhiMod (after cuts)", kTH2F, {{axisPtBins}, {axisPhiMod}});
+      histos.add("QA/QAPhiModPtBef", "PhiMod (before cuts)", kTH2F, {{axisPtBins}, {axisPhiMod}});
+      histos.add("QA/QAPhiModPtAft", "PhiMod (after cuts)", kTH2F, {{axisPtBins}, {axisPhiMod}});
       
       
+      fPhiCutLow = new TF1("fPhiCutLow", "0.06/x+pi/18.0-0.02", 0, 100);
+      fPhiCutHigh = new TF1("fPhiCutHigh", "0.1/x+pi/18.0+0.025", 0, 100);
       
-    fPhiCutLow = new TF1("fPhiCutLow", "0.1/x/x+pi/18.0-0.025", 0, 100);
-    fPhiCutHigh = new TF1("fPhiCutHigh", "0.12/x+pi/18.0+0.035", 0, 100);
-      
-      /*
-       //apass4
-      fMultPVCutLow = new TF1("fMultPVCutLow", "[0]+[1]*x+[2]*exp([3]-[4]*x) - 1.5*([5]+[6]*exp([7]-[8]*x))", 0, 100);
-      fMultPVCutLow->SetParameters(-1711.7, 12.3933, 5443.58, -0.309964, 0.0207678, -39.6244, 398.077, -0.254616, 0.0210094);
-      
-      fMultPVCutHigh = new TF1("fMultPVCutHigh", "[0]+[1]*x+[2]*exp([3]-[4]*x) + 3.*([5]+[6]*exp([7]-[8]*x))", 0, 100);
-      fMultPVCutHigh->SetParameters(-1711.7, 12.3933, 5443.58, -0.309964, 0.0207678, -39.6244, 398.077, -0.254616, 0.0210094);
-      
-      
-      
-      fMultCutLow = new TF1("fMultCutLow", "[0]+[1]*x+[2]*exp([3]-[4]*x) - 3.5*([5]+[6]*exp([7]-[8]*x))", 0, 100);
-      fMultCutLow->SetParameters(-1376.5, 10.0628, 4540.18, -0.372891, 0.0206561, -74.0855, 358.088, -0.746904, 0.00867761);
-      
-      fMultCutHigh = new TF1("fMultCutHigh", "[0]+[1]*x+[2]*exp([3]-[4]*x) + 3.5*([5]+[6]*exp([7]-[8]*x))", 0, 100);
-      fMultCutHigh->SetParameters(-1376.5, 10.0628, 4540.18, -0.372891, 0.0206561, -74.0855, 358.088, -0.746904, 0.00867761);
-      */
-      
-      
+
       fMultPVCutLow = new TF1("fMultPVCutLow", "[0]+[1]*x+[2]*x*x+[3]*x*x*x - 2.5*([4]+[5]*x+[6]*x*x+[7]*x*x*x+[8]*x*x*x*x)", 0, 100);
       fMultPVCutLow->SetParameters(2821.65, -86.2355, 0.900795, -0.0032178, 367.538, -15.6357, 0.35541, -0.00407947, 1.74792e-05);
       
@@ -505,6 +488,7 @@ struct flow_base {
       if (t0cCentr >= 80. || t0cCentr < 0)
           return;
       
+      /*
       if (multNTracksPV < fMultPVCutLow->Eval(t0cCentr))
           return;
       
@@ -519,9 +503,10 @@ struct flow_base {
           return;
       
       //new cut
-      if (multTrk > fMultMultPVCut->Eval(multNTracksPV))
+      //if (multTrk > fMultMultPVCut->Eval(multNTracksPV))
+      if (multTrk < fMultMultPVCut->Eval(multNTracksPV))
           return;
-      
+      */
 
       
       histos.fill(HIST("vtxCutsAft"), zvtx);
@@ -560,6 +545,22 @@ struct flow_base {
 
       if (TMath::Abs(tracketa) >= etaCut || track.tpcNClsFound() < noClus || trackpt < minPt || trackpt >= maxPt || TMath::Abs(trackdcaz) >= dcazCut || TMath::Abs(trackdcaxy) >= dcaxyCut)
         continue;
+        
+        if (phiCut) {
+          Double_t phimodn = trackphi;
+          if (field < 0) // for negative polarity field
+            phimodn = TMath::TwoPi() - phimodn;
+          if (track.sign() < 0) // for negative charge
+            phimodn = TMath::TwoPi() - phimodn;
+          if (phimodn < 0)
+            LOGF(warning, "phi < 0: %g", phimodn);
+
+          phimodn += TMath::Pi() / 18.0; // to center gap in the middle
+          phimodn = fmod(phimodn, TMath::Pi() / 9.0);
+            
+          //if (phimodn < fPhiCutHigh->Eval(trackpt) && phimodn > fPhiCutLow->Eval(trackpt))
+          //    continue; // reject track
+        }
 
       Double_t sinHarm = TMath::Sin(nHarm * trackphi);
       Double_t cosHarm = TMath::Cos(nHarm * trackphi);
@@ -622,10 +623,13 @@ struct flow_base {
 
         phimod += TMath::Pi() / 18.0; // to center gap in the middle
         phimod = fmod(phimod, TMath::Pi() / 9.0);
-        //if (phimod < fPhiCutHigh->Eval(trackpt) && phimod > fPhiCutLow->Eval(trackpt))
-        //  continue; // reject track
           
-        histos.fill(HIST("QA/QAPhiModPt"), trackpt, phimod);
+        histos.fill(HIST("QA/QAPhiModPtBef"), trackpt, phimod);
+          
+        //if (phimod < fPhiCutHigh->Eval(trackpt) && phimod > fPhiCutLow->Eval(trackpt))
+        //    continue; // reject track
+          
+          histos.fill(HIST("QA/QAPhiModPtAft"), trackpt, phimod);
       }
 
       if (crsRowsFrcShCls) {
