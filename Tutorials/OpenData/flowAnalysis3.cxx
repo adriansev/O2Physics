@@ -346,28 +346,27 @@ struct flow_base {
       histos.add("QA/QAPhiModPtAft", "PhiMod (after cuts)", kTH2F, {{axisPtBins}, {axisPhiMod}});
       
       
-      fPhiCutLow = new TF1("fPhiCutLow", "0.06/x+pi/18.0-0.02", 0, 100);
-      fPhiCutHigh = new TF1("fPhiCutHigh", "0.1/x+pi/18.0+0.025", 0, 100);
+      fPhiCutLow = new TF1("fPhiCutLow", "0.06/x+pi/18.0-0.015", 0, 100);
+      fPhiCutHigh = new TF1("fPhiCutHigh", "0.1/x+pi/18.0+0.02", 0, 100);
       
 
       fMultPVCutLow = new TF1("fMultPVCutLow", "[0]+[1]*x+[2]*x*x+[3]*x*x*x - 2.5*([4]+[5]*x+[6]*x*x+[7]*x*x*x+[8]*x*x*x*x)", 0, 100);
-      fMultPVCutLow->SetParameters(2821.65, -86.2355, 0.900795, -0.0032178, 367.538, -15.6357, 0.35541, -0.00407947, 1.74792e-05);
+      fMultPVCutLow->SetParameters(2834.66, -87.0127, 0.915126, -0.00330136, 332.513, -12.3476, 0.251663, -0.00272819, 1.12242e-05);
       
       fMultPVCutHigh = new TF1("fMultPVCutHigh", "[0]+[1]*x+[2]*x*x+[3]*x*x*x + 2.5*([4]+[5]*x+[6]*x*x+[7]*x*x*x+[8]*x*x*x*x)", 0, 100);
-      fMultPVCutHigh->SetParameters(2821.65, -86.2355, 0.900795, -0.0032178, 367.538, -15.6357, 0.35541, -0.00407947, 1.74792e-05);
+      fMultPVCutHigh->SetParameters(2834.66, -87.0127, 0.915126, -0.00330136, 332.513, -12.3476, 0.251663, -0.00272819, 1.12242e-05);
       
       
       
-      fMultCutLow = new TF1("fMultCutLow", "[0]+[1]*x+[2]*exp([3]-[4]*x) - 2.5*([5]+[6]*x)", 0, 100);
-      fMultCutLow->SetParameters(-2873.81, 19.3377, 6235.2, -0.265518, 0.0157396, 111.674, -1.2196);
+      fMultCutLow = new TF1("fMultCutLow", "[0]+[1]*x+[2]*x*x+[3]*x*x*x - 2.5*([4]+[5]*x)", 0, 100);
+      fMultCutLow->SetParameters(1893.94, -53.86, 0.502913, -0.0015122, 109.625, -1.19253);
       
-      fMultCutHigh = new TF1("fMultCutHigh", "[0]+[1]*x+[2]*exp([3]-[4]*x) + 3.5*([5]+[6]*x)", 0, 100);
-      fMultCutHigh->SetParameters(-2873.81, 19.3377, 6235.2, -0.265518, 0.0157396, 111.674, -1.2196);
-      
+      fMultCutHigh = new TF1("fMultCutHigh", "[0]+[1]*x+[2]*x*x+[3]*x*x*x + 3.*([4]+[5]*x)", 0, 100);
+      fMultCutHigh->SetParameters(1893.94, -53.86, 0.502913, -0.0015122, 109.625, -1.19253);
       
       
       fMultMultPVCut = new TF1("fMultMultPVCut", "[0]+[1]*x+[2]*x*x", 0, 5000);
-      fMultMultPVCut->SetParameters(-0.1, 0.78, -4.7e-05);
+      fMultMultPVCut->SetParameters(-0.1, 0.785, -4.7e-05);
       
       
 
@@ -488,7 +487,7 @@ struct flow_base {
       if (t0cCentr >= 80. || t0cCentr < 0)
           return;
       
-      /*
+      
       if (multNTracksPV < fMultPVCutLow->Eval(t0cCentr))
           return;
       
@@ -503,10 +502,10 @@ struct flow_base {
           return;
       
       //new cut
-      //if (multTrk > fMultMultPVCut->Eval(multNTracksPV))
-      if (multTrk < fMultMultPVCut->Eval(multNTracksPV))
+      //if (multTrk < fMultMultPVCut->Eval(multNTracksPV))
+      if (multTrk > fMultMultPVCut->Eval(multNTracksPV))
           return;
-      */
+      
 
       
       histos.fill(HIST("vtxCutsAft"), zvtx);
@@ -558,8 +557,8 @@ struct flow_base {
           phimodn += TMath::Pi() / 18.0; // to center gap in the middle
           phimodn = fmod(phimodn, TMath::Pi() / 9.0);
             
-          //if (phimodn < fPhiCutHigh->Eval(trackpt) && phimodn > fPhiCutLow->Eval(trackpt))
-          //    continue; // reject track
+          if (phimodn < fPhiCutHigh->Eval(trackpt) && phimodn > fPhiCutLow->Eval(trackpt))
+              continue; // reject track
         }
 
       Double_t sinHarm = TMath::Sin(nHarm * trackphi);
@@ -626,8 +625,8 @@ struct flow_base {
           
         histos.fill(HIST("QA/QAPhiModPtBef"), trackpt, phimod);
           
-        //if (phimod < fPhiCutHigh->Eval(trackpt) && phimod > fPhiCutLow->Eval(trackpt))
-        //    continue; // reject track
+        if (phimod < fPhiCutHigh->Eval(trackpt) && phimod > fPhiCutLow->Eval(trackpt))
+            continue; // reject track
           
           histos.fill(HIST("QA/QAPhiModPtAft"), trackpt, phimod);
       }
