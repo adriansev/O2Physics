@@ -47,8 +47,8 @@ struct flow_base {
   using TracksPID = soa::Join<aod::pidTPCFullPi, aod::pidTPCFullKa, aod::pidTPCFullPr, aod::pidTOFFullPi, aod::pidTOFFullKa, aod::pidTOFFullPr, aod::pidTOFbeta>;
   using TrackCandidates = soa::Join<aod::Tracks, aod::TracksExtra, aod::TracksDCA, aod::TrackSelection, TracksPID>;
   using FilteredTracks = soa::Filtered<TrackCandidates>;
-    Filter trackFilter = ((requireGlobalTrackInFilter()) || (aod::track::isGlobalTrackSDD == (uint8_t) true));
-    //Filter trackFilter = (requireGlobalTrackInFilter());
+    //Filter trackFilter = ((requireGlobalTrackInFilter()) || (aod::track::isGlobalTrackSDD == (uint8_t) true));
+    Filter trackFilter = (requireGlobalTrackInFilter());
 
   Configurable<int> eventSelection{"eventSelection", 1, "event selection"};
   Configurable<bool> phiCut{"phiCut", false, "activate phi cut"};
@@ -225,7 +225,7 @@ struct flow_base {
       AxisSpec axisDCAz{100, -2.5f, 2.5f, "DCA_{z}"};
       AxisSpec axisDCAxy{100, -0.5f, 0.5f, "DCA_{xy}"};
       AxisSpec axisMultFw{1000, 0, 200000, "mult"};
-      AxisSpec axisMult{1000, 0.f, 4000.f, "multiplicity"};
+      AxisSpec axisMult{1000, 0.f, 5000.f, "multiplicity"};
       AxisSpec axisPhiMod{100, 0.f, 0.4f, "phiMod"};
 
       histos.add("vtx", "Vtx info (0=no, 1=yes); Vtx; Counts", kTH1I, {axisVtxcounts});
@@ -245,6 +245,8 @@ struct flow_base {
       histos.add("multV0AvsmultT0ABef", " multiplicity V0A vs multiplicity T0A", kTH2F, {axisMultFw, axisMultFw});
       histos.add("multV0AvsmultT0CBef", " multiplicity V0A vs multiplicity T0C", kTH2F, {axisMultFw, axisMultFw});
       histos.add("multT0CvsCentBef", " multiplicity T0C vs centrality T0C", kTH2F, {axisCent, axisMultFw});
+      histos.add("multITSvsMultITSTPCBef", " multiplicity ITS vs multiplicity ITS+TPC", kTH2F, {axisMult, axisMult});
+      histos.add("multITSvsMultITSTPCNBef", " multiplicity ITS vs multiplicity ITS+TPC", kTH2F, {axisMult, axisMult});
 
         
       histos.add("vtxCutsAft", "Vtx distribution; Vtx z [cm]; Counts", kTH1F, {axisZvert});
@@ -262,6 +264,8 @@ struct flow_base {
       histos.add("multV0AvsmultT0AAft", " multiplicity V0A vs multiplicity T0A", kTH2F, {axisMultFw, axisMultFw});
       histos.add("multV0AvsmultT0CAft", " multiplicity V0A vs multiplicity T0C", kTH2F, {axisMultFw, axisMultFw});
       histos.add("multT0CvsCentAft", " multiplicity T0C vs centrality T0C", kTH2F, {axisCent, axisMultFw});
+      histos.add("multITSvsMultITSTPCAft", " multiplicity ITS vs multiplicity ITS+TPC", kTH2F, {axisMult, axisMult});
+      histos.add("multITSvsMultITSTPCNAft", " multiplicity ITS vs multiplicity ITS+TPC", kTH2F, {axisMult, axisMult});
 
       
     histos.add("res", "centrality percentile vs Resolution", kTProfile, {axisCentBins});
@@ -346,23 +350,41 @@ struct flow_base {
       histos.add("QA/QAPhiModPtAft", "PhiMod (after cuts)", kTH2F, {{axisPtBins}, {axisPhiMod}});
       
       
-      fPhiCutLow = new TF1("fPhiCutLow", "0.06/x+pi/18.0-0.015", 0, 100);
-      fPhiCutHigh = new TF1("fPhiCutHigh", "0.1/x+pi/18.0+0.02", 0, 100);
+      fPhiCutLow = new TF1("fPhiCutLow", "0.06/x+pi/18.0-0.02", 0, 100);
+      fPhiCutHigh = new TF1("fPhiCutHigh", "0.1/x+pi/18.0+0.025", 0, 100);
       
-
+      /*
+       //apass4
+      fMultPVCutLow = new TF1("fMultPVCutLow", "[0]+[1]*x+[2]*exp([3]-[4]*x) - 1.5*([5]+[6]*exp([7]-[8]*x))", 0, 100);
+      fMultPVCutLow->SetParameters(-1711.7, 12.3933, 5443.58, -0.309964, 0.0207678, -39.6244, 398.077, -0.254616, 0.0210094);
+      
+      fMultPVCutHigh = new TF1("fMultPVCutHigh", "[0]+[1]*x+[2]*exp([3]-[4]*x) + 3.*([5]+[6]*exp([7]-[8]*x))", 0, 100);
+      fMultPVCutHigh->SetParameters(-1711.7, 12.3933, 5443.58, -0.309964, 0.0207678, -39.6244, 398.077, -0.254616, 0.0210094);
+      
+      
+      
+      fMultCutLow = new TF1("fMultCutLow", "[0]+[1]*x+[2]*exp([3]-[4]*x) - 3.5*([5]+[6]*exp([7]-[8]*x))", 0, 100);
+      fMultCutLow->SetParameters(-1376.5, 10.0628, 4540.18, -0.372891, 0.0206561, -74.0855, 358.088, -0.746904, 0.00867761);
+      
+      fMultCutHigh = new TF1("fMultCutHigh", "[0]+[1]*x+[2]*exp([3]-[4]*x) + 3.5*([5]+[6]*exp([7]-[8]*x))", 0, 100);
+      fMultCutHigh->SetParameters(-1376.5, 10.0628, 4540.18, -0.372891, 0.0206561, -74.0855, 358.088, -0.746904, 0.00867761);
+      */
+      
+      
       fMultPVCutLow = new TF1("fMultPVCutLow", "[0]+[1]*x+[2]*x*x+[3]*x*x*x - 2.5*([4]+[5]*x+[6]*x*x+[7]*x*x*x+[8]*x*x*x*x)", 0, 100);
-      fMultPVCutLow->SetParameters(2834.66, -87.0127, 0.915126, -0.00330136, 332.513, -12.3476, 0.251663, -0.00272819, 1.12242e-05);
+      fMultPVCutLow->SetParameters(2821.65, -86.2355, 0.900795, -0.0032178, 367.538, -15.6357, 0.35541, -0.00407947, 1.74792e-05);
       
       fMultPVCutHigh = new TF1("fMultPVCutHigh", "[0]+[1]*x+[2]*x*x+[3]*x*x*x + 2.5*([4]+[5]*x+[6]*x*x+[7]*x*x*x+[8]*x*x*x*x)", 0, 100);
-      fMultPVCutHigh->SetParameters(2834.66, -87.0127, 0.915126, -0.00330136, 332.513, -12.3476, 0.251663, -0.00272819, 1.12242e-05);
+      fMultPVCutHigh->SetParameters(2821.65, -86.2355, 0.900795, -0.0032178, 367.538, -15.6357, 0.35541, -0.00407947, 1.74792e-05);
       
       
       
-      fMultCutLow = new TF1("fMultCutLow", "[0]+[1]*x+[2]*x*x+[3]*x*x*x - 2.5*([4]+[5]*x)", 0, 100);
-      fMultCutLow->SetParameters(1893.94, -53.86, 0.502913, -0.0015122, 109.625, -1.19253);
+      fMultCutLow = new TF1("fMultCutLow", "[0]+[1]*x+[2]*exp([3]-[4]*x) - 2.5*([5]+[6]*x)", 0, 100);
+      fMultCutLow->SetParameters(-2873.81, 19.3377, 6235.2, -0.265518, 0.0157396, 111.674, -1.2196);
       
-      fMultCutHigh = new TF1("fMultCutHigh", "[0]+[1]*x+[2]*x*x+[3]*x*x*x + 3.*([4]+[5]*x)", 0, 100);
-      fMultCutHigh->SetParameters(1893.94, -53.86, 0.502913, -0.0015122, 109.625, -1.19253);
+      fMultCutHigh = new TF1("fMultCutHigh", "[0]+[1]*x+[2]*exp([3]-[4]*x) + 3.5*([5]+[6]*x)", 0, 100);
+      fMultCutHigh->SetParameters(-2873.81, 19.3377, 6235.2, -0.265518, 0.0157396, 111.674, -1.2196);
+      
       
       
       fMultMultPVCut = new TF1("fMultMultPVCut", "[0]+[1]*x+[2]*x*x", 0, 5000);
@@ -478,6 +500,25 @@ struct flow_base {
       histos.fill(HIST("multV0AvsmultT0ABef"), multT0A, multV0A);
       histos.fill(HIST("multV0AvsmultT0CBef"), multT0C, multV0A);
       histos.fill(HIST("multT0CvsCentBef"), t0cCentr, multT0C);
+      
+      
+      Int_t multITS = 0, multITSn = 0, multITSTPC =0;
+      
+      for (auto& track : tracks) {
+          
+          if (track.hasITS() && !track.hasTPC())
+              multITS++;
+          
+          if (track.hasITS())
+              multITSn++;
+          
+          if (track.hasITS() && track.hasTPC())
+              multITSTPC++;
+   
+      }
+
+      histos.fill(HIST("multITSvsMultITSTPCBef"), multITSTPC, multITS);
+      histos.fill(HIST("multITSvsMultITSTPCNBef"), multITSTPC, multITSn);
 
 
       
@@ -486,7 +527,6 @@ struct flow_base {
       
       if (t0cCentr >= 80. || t0cCentr < 0)
           return;
-      
       
       if (multNTracksPV < fMultPVCutLow->Eval(t0cCentr))
           return;
@@ -501,6 +541,7 @@ struct flow_base {
       if (multTrk > fMultCutHigh->Eval(t0cCentr))
           return;
       
+
       //new cut
       //if (multTrk < fMultMultPVCut->Eval(multNTracksPV))
       if (multTrk > fMultMultPVCut->Eval(multNTracksPV))
@@ -523,6 +564,9 @@ struct flow_base {
       histos.fill(HIST("multV0AvsmultT0AAft"), multT0A, multV0A);
       histos.fill(HIST("multV0AvsmultT0CAft"), multT0C, multV0A);
       histos.fill(HIST("multT0CvsCentAft"), t0cCentr, multT0C);
+      
+      histos.fill(HIST("multITSvsMultITSTPCAft"), multITSTPC, multITS);
+      histos.fill(HIST("multITSvsMultITSTPCNAft"), multITSTPC, multITSn);
 
       
     // process the tracks of a given collision
@@ -606,10 +650,6 @@ struct flow_base {
       if (TMath::Abs(tracketa) >= etaCut || track.tpcNClsFound() < noClus || trackpt < minPt || trackpt >= maxPt || TMath::Abs(trackdcaz) >= dcazCut || TMath::Abs(trackdcaxy) >= dcaxyCut)
         continue;
         
-        histos.fill(HIST("QA/QAEtaPhiAft"), tracketa, trackphi, t0cCentr);
-        histos.fill(HIST("QA/QADCAzAft"), trackdcaz, t0cCentr);
-        histos.fill(HIST("QA/QADCAxyAft"), trackdcaxy, t0cCentr);
-        
 
       if (phiCut) {
         Double_t phimod = trackphi;
@@ -643,6 +683,11 @@ struct flow_base {
         if (track.tpcCrossedRowsOverFindableCls() < 0.9)
           continue;
       }
+        
+        histos.fill(HIST("QA/QAEtaPhiAft"), tracketa, trackphi, t0cCentr);
+        histos.fill(HIST("QA/QADCAzAft"), trackdcaz, t0cCentr);
+        histos.fill(HIST("QA/QADCAxyAft"), trackdcaxy, t0cCentr);
+        
 
       Double_t sinHarmn = TMath::Sin(nHarm * trackphi);
       Double_t cosHarmn = TMath::Cos(nHarm * trackphi);
