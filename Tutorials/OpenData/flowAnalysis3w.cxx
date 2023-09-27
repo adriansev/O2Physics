@@ -202,7 +202,7 @@ struct flow_base {
     histos.fill(HIST("QA/QABetaP"), trackp, beta, cent);
     }
 
-    void init(InitContext&) {
+  void init(InitContext&) {
         AxisSpec axisVtxcounts{2, -0.5f, 1.5f, "Vtx info (0=no, 1=yes)"};
         AxisSpec axisZvert{120, -30.f, 30.f, "Vtx z (cm)"};
         AxisSpec axisCent{100, 0.f, 100.f, "centrality"};

@@ -15,6 +15,7 @@
 /// \author
 /// \since
 
+#include <vector>
 #include <TF1.h>
 #include <TH3.h>
 #include <Framework/runDataProcessing.h>
@@ -52,6 +53,15 @@ struct flow_base {
   Configurable<float> minPt{"minPt", 0.2, "Minimum pt"};
   Configurable<float> maxPt{"maxPt", 20.0, "Maximum pt"};
 
+  Configurable<std::string> weightFile{"weightFile", "./histCenWght.root", "File with weights"};
+  Configurable<std::string> weightTHname{"weightTHname", "hCenWg", "Hist with weights"};
+  Configurable<std::string> weightPhiTHname{"weightPhiTHname", "hEtaPhiWeights", "Hist phi with weights"};
+
+  TFile* wTF = nullptr;
+  TH1D*  wH = nullptr;
+
+  std::vector<TH2D*> wPhiH;
+
   TF1* fPhiCutLow = nullptr;
   TF1* fPhiCutHigh = nullptr;
 
@@ -63,20 +73,20 @@ struct flow_base {
   Filter collisionFilter = (aod::collision::flags & (uint16_t)aod::collision::CollisionFlagsRun2::Run2VertexerTracks) == (uint16_t)aod::collision::CollisionFlagsRun2::Run2VertexerTracks;
   Filter trackFilter = ((requireGlobalTrackInFilter()) || (aod::track::isGlobalTrackSDD == (uint8_t) true));
 
-  void fillAPt(double trackpt, double cent, double vn, double sinHarm, double cosHarm)
+  void fillAPt(double trackpt, double cent, double vn, double sinHarm, double cosHarm, double wght)
   {
       histos.fill(HIST("PtA"), cent, trackpt);
-    histos.fill(HIST("VnAPt"), trackpt, cent, vn);
-    histos.fill(HIST("SinnAPt"), trackpt, cent, sinHarm);
-    histos.fill(HIST("CosnAPt"), trackpt, cent, cosHarm);
+    histos.fill(HIST("VnAPt"), trackpt, cent, vn, wght);
+    histos.fill(HIST("SinnAPt"), trackpt, cent, sinHarm, wght);
+    histos.fill(HIST("CosnAPt"), trackpt, cent, cosHarm, wght);
   }
 
-  void fillCPt(double trackpt, double cent, double vn, double sinHarm, double cosHarm)
+  void fillCPt(double trackpt, double cent, double vn, double sinHarm, double cosHarm, double wght)
   {
       histos.fill(HIST("PtC"), cent, trackpt);
-    histos.fill(HIST("VnCPt"), trackpt, cent, vn);
-    histos.fill(HIST("SinnCPt"), trackpt, cent, sinHarm);
-    histos.fill(HIST("CosnCPt"), trackpt, cent, cosHarm);
+    histos.fill(HIST("VnCPt"), trackpt, cent, vn, wght);
+    histos.fill(HIST("SinnCPt"), trackpt, cent, sinHarm, wght);
+    histos.fill(HIST("CosnCPt"), trackpt, cent, cosHarm, wght);
   }
 
 
@@ -101,11 +111,10 @@ struct flow_base {
     histos.add("vtx", "Vtx info (0=no, 1=yes); Vtx; Counts", kTH1I, {axisVtxcounts});
     histos.add("vtxCuts", "Vtx distribution (before cuts); Vtx z [cm]; Counts", kTH1F, {axisZvert});
     histos.add("multvsCent", "centrality vs multiplicity", kTH2F, {axisCent, axisMult});
-    histos.add("cenCL0vsV0M", "centrality V0M vs centrality CL0", kTH2F, {axisCent, axisCentCL0});
-    histos.add("cenCL1vsV0M", "centrality V0M vs centrality CL1", kTH2F, {axisCent, axisCentCL1});
-    histos.add("cenCL1vsCL0", "centrality CL1 vs centrality CL0", kTH2F, {axisCentCL1, axisCentCL0});
     histos.add("SPclsvsSPDtrks", "SPD N_{tracklets} vs SPD N_{clusters}", kTH2I, {axisTracklets, axisClusters});
     histos.add("multV0onvsMultV0of", "V0 offline vs V0 online", kTH2F, {axismultV0of, axismultV0on});
+      histos.add("centAft", "centrality V0M", kTH1F, {axisCent});
+      
     histos.add("res", "centrality percentile vs Resolution", kTProfile, {axisCentBins});
     histos.add("QxnA", "centrality percentile vs #LT Q_{x}^{nA} #GT", kTProfile, {axisCentBins});
     histos.add("QxnC", "centrality percentile vs #LT Q_{x}^{nC} #GT", kTProfile, {axisCentBins});
@@ -123,6 +132,9 @@ struct flow_base {
       
       histos.add("QAEtaPhi", "#eta #varphi", kTH3F, {{axisEta}, {axisPhi}, {axisCentBins}});
       histos.add("QAEtaPhiAft", "#eta #varphi (after cuts)", kTH3F, {{axisEta}, {axisPhi}, {axisCentBins}});
+      histos.add("QAPhiWAft", "#varphi (after cuts)", kTH2F, {{axisCentBins}, {axisPhi}});
+      
+      
 
 
 
@@ -135,6 +147,22 @@ struct flow_base {
 
     long now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     ccdb->setCreatedNotAfter(now); // TODO must become global parameter from the train creation time
+
+    std::string weight_file_name = weightFile.value;
+    wTF = TFile::Open(weight_file_name.c_str(), "READ");
+
+    std::string weight_histogram_name = weightTHname.value;
+    std::string weightPhi_histogram_name = weightPhiTHname.value;
+
+    if (wTF){
+        wTF->GetObject(weight_histogram_name.c_str(), wH);
+        for (int i = 0; i < 9; i++) {
+            TH2D* temp_pointer = nullptr;
+            wTF->GetObject(Form("%s_%d", weightPhi_histogram_name.c_str(), i), temp_pointer);
+            wPhiH.push_back(temp_pointer);
+            }
+        }
+
   }
 
   int getMagneticField(uint64_t timestamp)
@@ -152,11 +180,11 @@ struct flow_base {
     return grpo->getNominalL3Field();
   }
 
+    
   void process(FilteredCollisions::iterator const& collision, BCsWithRun2Infos const& bcs, FilteredTracks const& tracks)
   {
 
-    //if ((eventSelection == 1) && (!collision.alias_bit(kINT7) || !collision.sel7())) {
-      if ((eventSelection == 1) && (!collision.alias_bit(kINT7))) {
+    if ((eventSelection == 1) && (!collision.alias_bit(kINT7) || !collision.sel7())) {
       // LOGF(info, "Collision index : %d skipped not kINT7", collision.index());
       return;
     }
@@ -181,15 +209,42 @@ struct flow_base {
       if (TMath::Abs(zvtx) > vtxCut)
           return;
       
-      auto v0Centr = collision.centRun2V0M();
-      //auto cl1Centr = collision.centRun2CL1();
-      auto cl1Centr = 0;
-      //auto cl0Centr = collision.centRun2CL0();
-      auto cl0Centr = 0;
-
       
+      auto v0Centr = collision.centRun2V0M();
       if (v0Centr >= 80. || v0Centr < 0)
           return;
+      
+
+      Short_t cen = -1;
+      if (v0Centr < 5) {
+          cen = 0;
+      } else if (v0Centr >= 5 && v0Centr < 10) {
+          cen = 1;
+      } else if (v0Centr >= 10 && v0Centr < 20) {
+          cen = 2;
+      } else if (v0Centr >= 20 && v0Centr < 30) {
+          cen = 3;
+      } else if (v0Centr >= 30 && v0Centr < 40) {
+          cen = 4;
+      } else if (v0Centr >= 40 && v0Centr < 50) {
+          cen = 5;
+      } else if (v0Centr >= 50 && v0Centr < 60) {
+          cen = 6;
+      } else if (v0Centr >= 60 && v0Centr < 70){
+          cen = 7;
+      } else if (v0Centr >= 70 && v0Centr < 80){
+          cen = 8;
+      }
+
+      if (cen < 0) {
+          return;
+      }
+
+      // Use weigts TH1D
+      auto v0CentrW = 1.;
+      if (wH){
+          v0CentrW = wH->GetBinContent(wH->FindBin(v0Centr));
+      }
       
       auto bc = collision.bc_as<BCsWithRun2Infos>();
       auto field = getMagneticField(bc.timestamp());
@@ -197,7 +252,6 @@ struct flow_base {
       auto nITSClsLy0 = bc.spdClustersL0();
       auto nITSClsLy1 = bc.spdClustersL1();
       auto nITSCls = nITSClsLy0 + nITSClsLy1;
-      
       auto nITSTrkls = collision.multTracklets();
       
       auto multV0a = collision.multFV0A();
@@ -206,14 +260,11 @@ struct flow_base {
       auto multV0aOn = bc.v0TriggerChargeA();
       auto multV0cOn = bc.v0TriggerChargeC();
       auto multV0On = multV0aOn + multV0cOn;
-      
-      
+            
       histos.fill(HIST("vtxCuts"), zvtx);
-      histos.fill(HIST("cenCL0vsV0M"), v0Centr, cl0Centr);
-      histos.fill(HIST("cenCL1vsV0M"), v0Centr, cl1Centr);
-      histos.fill(HIST("cenCL1vsCL0"), cl1Centr, cl0Centr);
       histos.fill(HIST("SPclsvsSPDtrks"), nITSTrkls, nITSCls);
       histos.fill(HIST("multV0onvsMultV0of"), multV0Tot, multV0On);
+      histos.fill(HIST("centAft"), v0Centr, v0CentrW);
       
       
       // process the tracks of a given collision
@@ -229,14 +280,17 @@ struct flow_base {
           
           Double_t trackpt = track.pt();
           Double_t tracketa = track.eta();
+          Double_t trackphi = track.phi();
           
           if (TMath::Abs(tracketa) >= etaCut ||
               track.tpcNClsFound() < noClus ||
               trackpt < minPt || trackpt >= maxPt)
               continue;
           
-          Double_t sinHarm = TMath::Sin(nHarm * track.phi());
-          Double_t cosHarm = TMath::Cos(nHarm * track.phi());
+          Double_t phiW = wPhiH[cen]->GetBinContent(wPhiH[cen]->FindBin(tracketa, trackphi));
+          
+          Double_t sinHarm = phiW*TMath::Sin(nHarm * track.phi());
+          Double_t cosHarm = phiW*TMath::Cos(nHarm * track.phi());
           
           if (tracketa > etaGap) {
               QxnGapC += cosHarm;
@@ -251,17 +305,19 @@ struct flow_base {
           }
       }
       
+      
       histos.fill(HIST("multvsCent"), v0Centr, multTrk);
+      
       
       if (multGapA > 0 && multGapC > 0) {
           Double_t resGap = (QxnGapA * QxnGapC + QynGapA * QynGapC) / (multGapA * multGapC);
-          histos.fill(HIST("res"), v0Centr, resGap);
+          histos.fill(HIST("res"), v0Centr, resGap, v0CentrW);
           
-          histos.fill(HIST("QxnA"), v0Centr, QxnGapA / multGapA);
-          histos.fill(HIST("QxnC"), v0Centr, QxnGapC / multGapC);
+          histos.fill(HIST("QxnA"), v0Centr, QxnGapA / multGapA, v0CentrW);
+          histos.fill(HIST("QxnC"), v0Centr, QxnGapC / multGapC, v0CentrW);
           
-          histos.fill(HIST("QynA"), v0Centr, QynGapA / multGapA);
-          histos.fill(HIST("QynC"), v0Centr, QynGapC / multGapC);
+          histos.fill(HIST("QynA"), v0Centr, QynGapA / multGapA, v0CentrW);
+          histos.fill(HIST("QynC"), v0Centr, QynGapC / multGapC, v0CentrW);
       }
       
       
@@ -308,20 +364,24 @@ struct flow_base {
           
           histos.fill(HIST("QAEtaPhiAft"), tracketa, trackphi, v0Centr);
           
-          Double_t sinHarmn = TMath::Sin(nHarm * trackphi);
-          Double_t cosHarmn = TMath::Cos(nHarm * trackphi);
+          Double_t phiWn = wPhiH[cen]->GetBinContent(wPhiH[cen]->FindBin(tracketa, trackphi));
+          
+          histos.fill(HIST("QAPhiWAft"), v0Centr, trackphi, phiWn);
+          
+          Double_t sinHarmn = phiWn*TMath::Sin(nHarm * trackphi);
+          Double_t cosHarmn = phiWn*TMath::Cos(nHarm * trackphi);
           
           Double_t harmGapC = cosHarmn * QxnGapC + sinHarmn * QynGapC;
           Double_t harmGapA = cosHarmn * QxnGapA + sinHarmn * QynGapA;
           
           if (tracketa > etaGap && multGapA > 0) {
               Double_t vnC = harmGapA / multGapA;
-              fillCPt(trackpt, v0Centr, vnC, sinHarmn, cosHarmn);
+              fillCPt(trackpt, v0Centr, vnC, sinHarmn, cosHarmn, v0CentrW);
           }
           
           if (tracketa < -etaGap && multGapC > 0) {
               Double_t vnA = harmGapC / multGapC;
-              fillAPt(trackpt, v0Centr, vnA, sinHarmn, cosHarmn);
+              fillAPt(trackpt, v0Centr, vnA, sinHarmn, cosHarmn, v0CentrW);
           }
       }
   }
