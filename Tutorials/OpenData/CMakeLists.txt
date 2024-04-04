@@ -15,16 +15,6 @@ o2physics_add_dpl_workflow(flow-analysis
                   PUBLIC_LINK_LIBRARIES O2::Framework O2Physics::AnalysisCore
                   COMPONENT_NAME AnalysisTutorial)
 
-o2physics_add_dpl_workflow(flow-analysis3
-                  SOURCES flowAnalysis3.cxx
-                  PUBLIC_LINK_LIBRARIES O2::Framework O2Physics::AnalysisCore
-                  COMPONENT_NAME AnalysisTutorial)
-
-o2physics_add_dpl_workflow(flow-analysis3w
-                  SOURCES flowAnalysis3w.cxx
-                  PUBLIC_LINK_LIBRARIES O2::Framework O2Physics::AnalysisCore
-                  COMPONENT_NAME AnalysisTutorial)
-
 o2physics_add_dpl_workflow(flow-analysis1
                   SOURCES flowAnalysis1.cxx
                   PUBLIC_LINK_LIBRARIES O2::Framework O2Physics::AnalysisCore
