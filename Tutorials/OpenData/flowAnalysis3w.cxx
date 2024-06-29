@@ -279,7 +279,7 @@ struct flow_base {
       
       fMultCutHigh = new TF1("fMultCutHigh", "[0]+[1]*x+[2]*x*x+[3]*x*x*x + 3.*([4]+[5]*x+[6]*x*x+[7]*x*x*x+[8]*x*x*x*x)", 0, 100);
       fMultCutHigh->SetParameters(1770.02, -49.5537, 0.460941, -0.00140622, 105.477, -1.58301, 0.011655, -0.000190804, 1.36003e-06);
-      */
+      
       
       //new cuts Igor
       fMultPVCutLow = new TF1("fMultPVCutLow", "[0]+[1]*x+[2]*x*x+[3]*x*x*x+[4]*x*x*x*x - 3.5*([5]+[6]*x+[7]*x*x+[8]*x*x*x+[9]*x*x*x*x)", 0, 100);
@@ -294,6 +294,25 @@ struct flow_base {
       
       fMultCutHigh = new TF1("fMultCutHigh", "[0]+[1]*x+[2]*x*x+[3]*x*x*x + 3.*([4]+[5]*x+[6]*x*x+[7]*x*x*x+[8]*x*x*x*x)", 0, 100);
       fMultCutHigh->SetParameters(1844.3, -51.4177, 0.476717, -0.00145503, 69.9419, -0.421047, -0.00841163, 5.49217e-05, 3.40521e-08);
+       */
+      
+      
+      //zzh apass4
+      //new cuts Igor
+      fMultPVCutLow = new TF1("fMultPVCutLow", "[0]+[1]*x+[2]*x*x+[3]*x*x*x+[4]*x*x*x*x - 3.5*([5]+[6]*x+[7]*x*x+[8]*x*x*x+[9]*x*x*x*x)", 0, 100);
+      fMultPVCutLow->SetParameters(3268.75, -119.296, 1.89914, -0.0163405, 6.2029e-05, 151.18, -3.22006, 0.0341881, -0.000265065, 9.47782e-07);
+      
+      fMultPVCutHigh = new TF1("fMultPVCutHigh", "[0]+[1]*x+[2]*x*x+[3]*x*x*x+[4]*x*x*x*x + 3.5*([5]+[6]*x+[7]*x*x+[8]*x*x*x+[9]*x*x*x*x)", 0, 100);
+      fMultPVCutHigh->SetParameters(3268.75, -119.296, 1.89914, -0.0163405, 6.2029e-05, 151.18, -3.22006, 0.0341881, -0.000265065, 9.47782e-07);
+      
+        
+      fMultCutLow = new TF1("fMultCutLow", "[0]+[1]*x+[2]*x*x+[3]*x*x*x - 3.*([4]+[5]*x+[6]*x*x+[7]*x*x*x+[8]*x*x*x*x)", 0, 100);
+      fMultCutLow->SetParameters(1583.95, -42.1168, 0.354222, -0.000874759, 70.118, -0.629755, -0.00389294, 2.646e-05, 5.54674e-08);
+      
+      fMultCutHigh = new TF1("fMultCutHigh", "[0]+[1]*x+[2]*x*x+[3]*x*x*x + 3.*([4]+[5]*x+[6]*x*x+[7]*x*x*x+[8]*x*x*x*x)", 0, 100);
+      fMultCutHigh->SetParameters(1583.95, -42.1168, 0.354222, -0.000874759, 70.118, -0.629755, -0.00389294, 2.646e-05, 5.54674e-08);
+      
+      
       
         
         ccdb->setURL("http://alice-ccdb.cern.ch");
