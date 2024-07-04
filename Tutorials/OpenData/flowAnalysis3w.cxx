@@ -298,7 +298,8 @@ struct flow_base {
       
       
       //zzh apass4
-      //new cuts Igor
+      /*
+      //test - new cuts Igor
       fMultPVCutLow = new TF1("fMultPVCutLow", "[0]+[1]*x+[2]*x*x+[3]*x*x*x+[4]*x*x*x*x - 3.5*([5]+[6]*x+[7]*x*x+[8]*x*x*x+[9]*x*x*x*x)", 0, 100);
       fMultPVCutLow->SetParameters(3268.75, -119.296, 1.89914, -0.0163405, 6.2029e-05, 151.18, -3.22006, 0.0341881, -0.000265065, 9.47782e-07);
       
@@ -311,8 +312,22 @@ struct flow_base {
       
       fMultCutHigh = new TF1("fMultCutHigh", "[0]+[1]*x+[2]*x*x+[3]*x*x*x + 3.*([4]+[5]*x+[6]*x*x+[7]*x*x*x+[8]*x*x*x*x)", 0, 100);
       fMultCutHigh->SetParameters(1583.95, -42.1168, 0.354222, -0.000874759, 70.118, -0.629755, -0.00389294, 2.646e-05, 5.54674e-08);
+      */
       
       
+      //test3
+      fMultPVCutLow = new TF1("fMultPVCutLow", "[0]+[1]*x+[2]*x*x+[3]*x*x*x+[4]*x*x*x*x - 3.5*([5]+[6]*x+[7]*x*x+[8]*x*x*x+[9]*x*x*x*x)", 0, 100);
+      fMultPVCutLow->SetParameters(3264.28, -118.681, 1.87824, -0.0160638, 6.07412e-05, 155.703, -3.73923, 0.0512274, -0.000490943, 2.02637e-06);
+      
+      fMultPVCutHigh = new TF1("fMultPVCutHigh", "[0]+[1]*x+[2]*x*x+[3]*x*x*x+[4]*x*x*x*x + 3.5*([5]+[6]*x+[7]*x*x+[8]*x*x*x+[9]*x*x*x*x)", 0, 100);
+      fMultPVCutHigh->SetParameters(3264.28, -118.681, 1.87824, -0.0160638, 6.07412e-05, 155.703, -3.73923, 0.0512274, -0.000490943, 2.02637e-06);
+      
+        
+      fMultCutLow = new TF1("fMultCutLow", "[0]+[1]*x+[2]*x*x+[3]*x*x*x - 3.*([4]+[5]*x+[6]*x*x+[7]*x*x*x+[8]*x*x*x*x)", 0, 100);
+      fMultCutLow->SetParameters(2002.87, -60.3593, 0.631186, -0.00230718, 100.991, -2.25966, 0.0364445, -0.000469859, 2.41897e-06);
+      
+      fMultCutHigh = new TF1("fMultCutHigh", "[0]+[1]*x+[2]*x*x+[3]*x*x*x + 3.*([4]+[5]*x+[6]*x*x+[7]*x*x*x+[8]*x*x*x*x)", 0, 100);
+      fMultCutHigh->SetParameters(2002.87, -60.3593, 0.631186, -0.00230718, 100.991, -2.25966, 0.0364445, -0.000469859, 2.41897e-06);
       
         
         ccdb->setURL("http://alice-ccdb.cern.ch");
